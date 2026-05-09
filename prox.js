@@ -93,7 +93,7 @@ async function navigateToUrl(inputUrl) {
     currentTab.currentUrl = inputUrl;
 
     // FIXED SCRAMJET CALL (no manual /scramjet/ prefix)
-    currentTab.iframe.go(scramjet.createUrl(url));
+    currentTab.iframe.go(url);
 
     addressInput.value = inputUrl;
     currentTab.el.querySelector(".tab-title").textContent = inputUrl;
