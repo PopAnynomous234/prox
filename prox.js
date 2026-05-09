@@ -11,7 +11,6 @@ const bookmarkBtn = document.getElementById("nav-bookmark");
 const inspectBtn = document.getElementById("nav-inspect");
 const bookmarkBar = document.getElementById("bookmark-bar");
 
-// Modal Elements
 const addBookmarkBtn = document.getElementById("nav-add-bookmark");
 const bookmarkModal = document.getElementById("bookmark-modal");
 const bmSaveBtn = document.getElementById("bm-save");
@@ -24,47 +23,56 @@ let activeTabId = null;
 let tabCounter = 0;
 let bookmarks = JSON.parse(localStorage.getItem("delta_bookmarks") || "[]");
 
-// --- ⚡ SPEED CORE: INITIALIZATION ---
+// --- SCRAMJET INIT ---
 const { ScramjetController } = $scramjetLoadController();
-const scramjet = new ScramjetController({
-    files: { wasm: "/prox/scram/scramjet.wasm.wasm", all: "/prox/scram/scramjet.all.js", sync: "/prox/scram/scramjet.sync.js" },
-});
-scramjet.init();
 
+const scramjet = new ScramjetController({
+    files: {
+        wasm: "/prox/scram/scramjet.wasm.wasm",
+        all: "/prox/scram/scramjet.all.js",
+        sync: "/prox/scram/scramjet.sync.js"
+    }
+});
+
+scramjet.init();
 scramjet.route = "/scramjet/";
 
 const connection = new BareMux.BareMuxConnection("/prox/baremux/worker.js");
 
-// PRE-WARM ENGINE: Register SW and Transport immediately on load
+// --- PREWARM ---
 (async () => {
     try {
-        // Start SW registration in background
-        if ('serviceWorker' in navigator) {
-            await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        if ("serviceWorker" in navigator) {
+            await navigator.serviceWorker.register("/sw.js", { scope: "/" });
         }
-        
-        // Setup Transport with Wisp V2 (UDP Support)
+
         const wispUrl = "wss://wisp.rhw.one/";
         await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: wispUrl }]);
-        console.log("🚀 Proxy Engine: HOT & UDP Ready");
+
+        console.log("🚀 Proxy Engine Ready");
     } catch (e) {
-        console.error("Proxy Warm-up failed:", e);
+        console.error("Proxy init failed:", e);
     }
 })();
 
-// --- Navigation Logic ---
+// --- NAVIGATION ---
 async function navigateToUrl(inputUrl) {
     const currentTab = tabs.find(t => t.id === activeTabId);
     if (!currentTab) return;
-    
-    // Convert input to proxied URL (search.js)
-    const url = search(inputUrl, searchEngine.value);
 
+    const normalizeUrl = (url) => {
+        if (!url.startsWith("http")) return "https://" + url;
+        return url;
+    };
+
+    const rawUrl = normalizeUrl(inputUrl);
+    const url = search(rawUrl, searchEngine.value);
+
+    // create frame if needed
     if (!currentTab.iframe) {
         const frame = scramjet.createFrame();
-        frame.frame.classList.add('sj-frame');
-        
-        // Optimization: Instant sizing to prevent layout shift
+        frame.frame.classList.add("sj-frame");
+
         Object.assign(frame.frame.style, {
             border: "none",
             width: "100%",
@@ -77,203 +85,220 @@ async function navigateToUrl(inputUrl) {
         currentTab.contentEl.style.display = "none";
         webviewContainer.appendChild(frame.frame);
         currentTab.iframe = frame;
-        setupFrameInjection(frame);
-    } 
 
-    currentTab.iframe.frame.style.display = 'block';
+        setupFrameInjection(frame);
+    }
+
+    currentTab.iframe.frame.style.display = "block";
     currentTab.currentUrl = inputUrl;
-    
-    // Execute navigation immediately (transport is already warm)
-    currentTab.iframe.go(url);
-    
-    // UI Updates
+
+    // FIXED SCRAMJET CALL (no manual /scramjet/ prefix)
+    currentTab.iframe.go(scramjet.createUrl(url));
+
     addressInput.value = inputUrl;
-    currentTab.el.querySelector('.tab-title').textContent = inputUrl;
+    currentTab.el.querySelector(".tab-title").textContent = inputUrl;
     updateBookmarkIcon();
 }
 
-// --- Bookmark & UI Logic ---
+// --- BOOKMARKS ---
 function renderBookmarks() {
     bookmarkBar.innerHTML = "";
-    const fragment = document.createDocumentFragment(); // Faster DOM insertion
+    const fragment = document.createDocumentFragment();
 
     bookmarks.forEach(bm => {
         const div = document.createElement("div");
         div.className = "bookmark-item";
-        
+
         const isJS = bm.url.startsWith("javascript:");
-        const iconUrl = isJS 
-            ? "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2326ff9a'><path d='M13 1.07V9h7c0-4.08-3.05-7.44-7-7.93M4 15c0 4.42 3.58 8 8 8s8-3.58 8-8v-4H4v4zm7-13.93C7.05 1.56 4 4.92 4 9h7V1.07z'/></svg>" 
+        const iconUrl = isJS
+            ? "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2326ff9a'><path d='M13 1.07V9h7c0-4.08-3.05-7.44-7-7.93M4 15c0 4.42 3.58 8 8 8s8-3.58 8-8v-4H4v4zm7-13.93C7.05 1.56 4 4.92 4 9h7V1.07z'/></svg>"
             : `https://www.google.com/s2/favicons?domain=${bm.url}&sz=32`;
 
-        div.innerHTML = `<img src="${iconUrl}" class="bookmark-icon" loading="lazy"><span>${bm.title}</span>`;
-        
+        div.innerHTML = `<img src="${iconUrl}" class="bookmark-icon"><span>${bm.title}</span>`;
+
         div.onclick = () => {
-            if (isJS) {
-                const t = tabs.find(x => x.id === activeTabId);
-                if (t?.iframe?.frame) {
-                    try {
-                        const targetDoc = t.iframe.frame.contentWindow.document;
-                        const code = decodeURIComponent(bm.url.replace("javascript:", ""));
-                        const script = targetDoc.createElement('script');
-                        script.textContent = `(function(){ ${code} })();`;
-                        targetDoc.documentElement.appendChild(script);
-                        script.remove();
-                    } catch (err) { alert("Security block: Site rejects injection."); }
-                }
-            } else {
-                navigateToUrl(bm.url);
-            }
+            if (isJS) return;
+            navigateToUrl(bm.url);
         };
-        
+
         div.oncontextmenu = (e) => {
             e.preventDefault();
-            if(confirm("Delete bookmark?")) {
+            if (confirm("Delete bookmark?")) {
                 bookmarks = bookmarks.filter(b => b.url !== bm.url);
                 localStorage.setItem("delta_bookmarks", JSON.stringify(bookmarks));
                 renderBookmarks();
             }
         };
+
         fragment.appendChild(div);
     });
+
     bookmarkBar.appendChild(fragment);
 }
 
-// --- Tab Management ---
+// --- TABS ---
 function createTab(url = null) {
     tabCounter++;
     const tabId = tabCounter;
+
     const tabEl = document.createElement("div");
     tabEl.className = "tab";
     tabEl.dataset.id = tabId;
-    tabEl.innerHTML = `<span class="tab-title">New Tab</span><button class="tab-close"><i class="fa-solid fa-xmark"></i></button>`;
-    
-    tabEl.onclick = (e) => { if(!e.target.closest('.tab-close')) switchTab(tabId); };
-    tabEl.querySelector('.tab-close').onclick = (e) => { e.stopPropagation(); closeTab(tabId); };
+
+    tabEl.innerHTML = `
+        <span class="tab-title">New Tab</span>
+        <button class="tab-close">x</button>
+    `;
+
+    tabEl.onclick = (e) => {
+        if (!e.target.classList.contains("tab-close")) switchTab(tabId);
+    };
+
+    tabEl.querySelector(".tab-close").onclick = (e) => {
+        e.stopPropagation();
+        closeTab(tabId);
+    };
+
     tabsStrip.insertBefore(tabEl, addTabBtn);
 
     const contentEl = homeTemplate.cloneNode(true);
     contentEl.id = `content-${tabId}`;
     contentEl.style.display = "none";
+
     webviewContainer.appendChild(contentEl);
 
-    tabs.push({ id: tabId, el: tabEl, contentEl: contentEl, iframe: null, currentUrl: url });
+    tabs.push({
+        id: tabId,
+        el: tabEl,
+        contentEl,
+        iframe: null,
+        currentUrl: url
+    });
+
     switchTab(tabId);
-    if(url) navigateToUrl(url);
+
+    if (url) navigateToUrl(url);
 }
 
 function switchTab(id) {
     activeTabId = id;
-    const currentTab = tabs.find(t => t.id === id);
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    currentTab.el.classList.add('active');
-    
+    const current = tabs.find(t => t.id === id);
+    if (!current) return;
+
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    current.el.classList.add("active");
+
     tabs.forEach(t => {
         t.contentEl.style.display = "none";
         if (t.iframe) t.iframe.frame.style.display = "none";
     });
 
-    if (currentTab.iframe) {
-        currentTab.iframe.frame.style.display = "block";
+    if (current.iframe) {
+        current.iframe.frame.style.display = "block";
     } else {
-        currentTab.contentEl.style.display = "flex";
+        current.contentEl.style.display = "flex";
     }
-    addressInput.value = currentTab.currentUrl || "";
+
+    addressInput.value = current.currentUrl || "";
     updateBookmarkIcon();
 }
 
 function closeTab(id) {
     const index = tabs.findIndex(t => t.id === id);
     if (index === -1) return;
+
     const tab = tabs[index];
     tab.el.remove();
     tab.contentEl.remove();
-    if(tab.iframe) tab.iframe.frame.remove();
+    if (tab.iframe) tab.iframe.frame.remove();
+
     tabs.splice(index, 1);
-    if (activeTabId === id && tabs.length > 0) switchTab(tabs[Math.max(0, index - 1)].id);
-    else if (tabs.length === 0) createTab();
+
+    if (tabs.length) switchTab(tabs[Math.max(0, index - 1)].id);
+    else createTab();
 }
 
-// --- Injections & Controls ---
+// --- FRAME INJECTION ---
 function setupFrameInjection(frame) {
     frame.frame.onload = () => {
         try {
             const win = frame.frame.contentWindow;
-            const innerDoc = win.document;
-            if (!innerDoc.getElementById('eruda-loader')) {
-                const script = innerDoc.createElement('script');
-                script.id = 'eruda-loader';
-                script.src = "https://cdn.jsdelivr.net/npm/eruda";
-                script.onload = () => {
-                    win.eruda.init();
-                    win.eruda._entryBtn.hide();
-                    win.erudaToggleState = false;
-                    win.addEventListener('message', (e) => {
-                        if (e.data === 'toggle-eruda') {
-                            win.erudaToggleState ? win.eruda.hide() : win.eruda.show();
-                            win.erudaToggleState = !win.erudaToggleState;
-                        }
-                    });
-                };
-                innerDoc.head.appendChild(script);
-            }
-        } catch (e) { console.warn("Injection blocked by site CSP."); }
+            const doc = win.document;
+
+            const script = doc.createElement("script");
+            script.src = "https://cdn.jsdelivr.net/npm/eruda";
+
+            script.onload = () => {
+                win.eruda.init();
+                win.eruda.hide();
+            };
+
+            doc.head.appendChild(script);
+
+            doc.addEventListener("click", (e) => {
+                const a = e.target.closest("a");
+                if (!a) return;
+                e.preventDefault();
+                win.location.href = a.href;
+            });
+
+        } catch (e) {
+            console.warn("Injection blocked:", e);
+        }
     };
 }
 
-// Modal logic
-addBookmarkBtn.onclick = (e) => {
+// --- UI ---
+function updateBookmarkIcon() {
+    const t = tabs.find(x => x.id === activeTabId);
+    if (!t?.currentUrl) return;
+
+    const exists = bookmarks.some(b => b.url === t.currentUrl);
+    bookmarkBtn.querySelector("i").className =
+        exists ? "fa-solid fa-star" : "fa-regular fa-star";
+}
+
+// --- EVENTS ---
+form.onsubmit = (e) => {
     e.preventDefault();
-    const currentTab = tabs.find(t => t.id === activeTabId);
-    bmNameInput.value = currentTab ? currentTab.el.querySelector('.tab-title').textContent : "";
-    bmUrlInput.value = currentTab ? currentTab.currentUrl : "";
-    bookmarkModal.style.display = "flex";
-};
-bmCancelBtn.onclick = () => { bookmarkModal.style.display = "none"; };
-bmSaveBtn.onclick = () => {
-    if (bmNameInput.value && bmUrlInput.value) {
-        bookmarks.push({ title: bmNameInput.value, url: bmUrlInput.value });
-        localStorage.setItem("delta_bookmarks", JSON.stringify(bookmarks));
-        renderBookmarks();
-        bookmarkModal.style.display = "none";
-        updateBookmarkIcon();
-    }
+    navigateToUrl(addressInput.value);
 };
 
-function toggleBookmark() {
-    const currentTab = tabs.find(t => t.id === activeTabId);
-    if (!currentTab?.currentUrl) return;
-    const url = currentTab.currentUrl;
-    const index = bookmarks.findIndex(b => b.url === url);
-    if (index !== -1) bookmarks.splice(index, 1);
+addTabBtn.onclick = () => createTab();
+bookmarkBtn.onclick = () => {
+    const t = tabs.find(x => x.id === activeTabId);
+    if (!t?.currentUrl) return;
+
+    const url = t.currentUrl;
+    const i = bookmarks.findIndex(b => b.url === url);
+
+    if (i >= 0) bookmarks.splice(i, 1);
     else {
-        let title = prompt("Bookmark Name:", url.split('/')[0]);
-        if(title) bookmarks.push({ url, title: title.substring(0, 15) });
+        const title = prompt("Bookmark name:");
+        if (title) bookmarks.push({ url, title });
     }
+
     localStorage.setItem("delta_bookmarks", JSON.stringify(bookmarks));
     renderBookmarks();
     updateBookmarkIcon();
-}
+};
 
-function updateBookmarkIcon() {
-    const currentTab = tabs.find(t => t.id === activeTabId);
-    if (!currentTab?.currentUrl) return;
-    const isBookmarked = bookmarks.some(b => b.url === currentTab.currentUrl);
-    bookmarkBtn.querySelector('i').className = isBookmarked ? "fa-solid fa-star" : "fa-regular fa-star";
-}
-
-// --- Event Listeners ---
-form.onsubmit = (e) => { e.preventDefault(); navigateToUrl(addressInput.value); };
-addTabBtn.onclick = () => createTab();
-bookmarkBtn.onclick = () => toggleBookmark();
 inspectBtn.onclick = () => {
     const t = tabs.find(x => x.id === activeTabId);
-    if (t?.iframe) t.iframe.frame.contentWindow.postMessage('toggle-eruda', '*');
+    if (t?.iframe) {
+        t.iframe.frame.contentWindow.postMessage("toggle-eruda", "*");
+    }
 };
-document.getElementById("nav-reload").onclick = () => tabs.find(x => x.id === activeTabId)?.iframe?.frame.contentWindow.location.reload();
-document.getElementById("nav-back").onclick = () => tabs.find(x => x.id === activeTabId)?.iframe?.frame.contentWindow.history.back();
-document.getElementById("nav-forward").onclick = () => tabs.find(x => x.id === activeTabId)?.iframe?.frame.contentWindow.history.forward();
 
-// Start
+document.getElementById("nav-reload").onclick = () =>
+    tabs.find(t => t.id === activeTabId)?.iframe?.frame.contentWindow.location.reload();
+
+document.getElementById("nav-back").onclick = () =>
+    tabs.find(t => t.id === activeTabId)?.iframe?.frame.contentWindow.history.back();
+
+document.getElementById("nav-forward").onclick = () =>
+    tabs.find(t => t.id === activeTabId)?.iframe?.frame.contentWindow.history.forward();
+
+// --- START ---
 renderBookmarks();
 createTab();
