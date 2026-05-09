@@ -27,44 +27,23 @@ let bookmarks = JSON.parse(localStorage.getItem("delta_bookmarks") || "[]");
 // --- ⚡ SPEED CORE: INITIALIZATION ---
 const { ScramjetController } = $scramjetLoadController();
 const scramjet = new ScramjetController({
-    prefix: "/shuttle/",
-    files: { 
-        wasm: "/prox/scram/scramjet.wasm.wasm", 
-        all: "/prox/scram/scramjet.all.js", 
-        sync: "/prox/scram/scramjet.sync.js" 
-    },
-    memory: 1024 
+    files: { wasm: "/scram/scramjet.wasm.wasm", all: "/scram/scramjet.all.js", sync: "/scram/scramjet.sync.js" },
 });
 scramjet.init();
 
-const connection = new BareMux.BareMuxConnection("/prox/baremux/worker.js");
+const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
 
 // PRE-WARM ENGINE: Register SW and Transport immediately on load
-const proxyWarmup = (async () => {
+(async () => {
     try {
         // Start SW registration in background
         if ('serviceWorker' in navigator) {
-            await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-            await navigator.serviceWorker.ready;
+            await navigator.serviceWorker.register('/sw.js', { scope: '/shuttle/' });
         }
         
-        const wispUrls = [
-            location.protocol === "https:" ? "wss://wisp.rhw.one/" : "ws://wisp.rhw.one/",
-            (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/"
-        ];
-
-        let transportConnected = false;
-        for (const wispUrl of wispUrls) {
-            try {
-                await connection.setTransport("/prox/epoxy/index.mjs", [{ wisp: wispUrl }]);
-                transportConnected = true;
-                break;
-            } catch (_transportErr) {}
-        }
-
-        if (!transportConnected) {
-            throw new Error("Unable to connect to any Wisp transport endpoint.");
-        }
+        // Setup Transport with Wisp V2 (UDP Support)
+        const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+        await connection.setTransport("/libcurl/index.mjs", [{ wisp: wispUrl }]);
         console.log("🚀 Proxy Engine: HOT & UDP Ready");
     } catch (e) {
         console.error("Proxy Warm-up failed:", e);
@@ -75,12 +54,6 @@ const proxyWarmup = (async () => {
 async function navigateToUrl(inputUrl) {
     const currentTab = tabs.find(t => t.id === activeTabId);
     if (!currentTab) return;
-
-    try {
-        await proxyWarmup;
-    } catch (_err) {
-        // Continue so users can still navigate even if warm-up partially fails.
-    }
     
     // Convert input to proxied URL (search.js)
     const url = search(inputUrl, searchEngine.value);
