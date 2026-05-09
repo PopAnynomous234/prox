@@ -27,11 +27,11 @@ let bookmarks = JSON.parse(localStorage.getItem("delta_bookmarks") || "[]");
 // --- ⚡ SPEED CORE: INITIALIZATION ---
 const { ScramjetController } = $scramjetLoadController();
 const scramjet = new ScramjetController({
-    files: { wasm: "/scram/scramjet.wasm.wasm", all: "/scram/scramjet.all.js", sync: "/scram/scramjet.sync.js" },
+    files: { wasm: "/prox/scram/scramjet.wasm.wasm", all: "/prox/scram/scramjet.all.js", sync: "/prox/scram/scramjet.sync.js" },
 });
 scramjet.init();
 
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+const connection = new BareMux.BareMuxConnection("/prox/baremux/worker.js");
 
 // PRE-WARM ENGINE: Register SW and Transport immediately on load
 (async () => {
@@ -42,8 +42,8 @@ const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
         }
         
         // Setup Transport with Wisp V2 (UDP Support)
-        const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
-        await connection.setTransport("/libcurl/index.mjs", [{ wisp: wispUrl }]);
+        const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "https://wisp.rhw.one/";
+        await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: wispUrl }]);
         console.log("🚀 Proxy Engine: HOT & UDP Ready");
     } catch (e) {
         console.error("Proxy Warm-up failed:", e);
