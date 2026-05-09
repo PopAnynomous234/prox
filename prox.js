@@ -31,6 +31,8 @@ const scramjet = new ScramjetController({
 });
 scramjet.init();
 
+scramjet.route = "/scramjet/";
+
 const connection = new BareMux.BareMuxConnection("/prox/baremux/worker.js");
 
 // PRE-WARM ENGINE: Register SW and Transport immediately on load
@@ -38,11 +40,11 @@ const connection = new BareMux.BareMuxConnection("/prox/baremux/worker.js");
     try {
         // Start SW registration in background
         if ('serviceWorker' in navigator) {
-            await navigator.serviceWorker.register('/sw.js', { scope: '/shuttle/' });
+            await navigator.serviceWorker.register('/sw.js', { scope: '/' });
         }
         
         // Setup Transport with Wisp V2 (UDP Support)
-        const wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "https://wisp.rhw.one/";
+        const wispUrl = "wss://wisp.rhw.one/";
         await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: wispUrl }]);
         console.log("🚀 Proxy Engine: HOT & UDP Ready");
     } catch (e) {
