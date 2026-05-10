@@ -40,14 +40,14 @@
     overflow: hidden;
 }
 
-        .home-screen h1 { font-size: 48px; margin-bottom: 30px; letter-spacing: -2px; }
+        .home-screen h1 { font-size: 3rem; margin-bottom: 2rem; letter-spacing: -0.05em; }
 .home-screen h3 {
    color:#ffffff;
-   
+   font-size: 1.2rem;
 }
 .home-screen img {
-   width: 150px;
-   height: 150px;
+   width: 10rem;
+   height: 10rem;
    /* A 1.2s total cycle (0.6s up, 0.6s down) works well for visibility */
    animation: up-down-trail 2s ease-in-out infinite;
 }
@@ -56,46 +56,46 @@
   /* 1. START AT BOTTOM: Moving UP */
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 5px 2px #ffffff); /* Trail starts behind (at bottom) */
+    filter: drop-shadow(0 0.3rem 0.1rem #ffffff); /* Trail starts behind (at bottom) */
   }
 
   /* 2. MID-WAY UP: Peak speed upward */
   25% {
-    filter: drop-shadow(0 25px 10px #ffffff); /* Long trail at bottom */
+    filter: drop-shadow(0 1.5rem 0.6rem #ffffff); /* Long trail at bottom */
   }
 
   /* 3. AT TOP: Switching directions */
   50% {
-    transform: translateY(-50px);
-    filter: drop-shadow(0 0 5px #ffffff); /* Trail resets as direction changes */
+    transform: translateY(-3rem);
+    filter: drop-shadow(0 0 0.3rem #ffffff); /* Trail resets as direction changes */
   }
 
   /* 4. MID-WAY DOWN: Peak speed downward */
   75% {
-    filter: drop-shadow(0 -25px 10px #ffffff); /* Long trail at TOP */
+    filter: drop-shadow(0 -1.5rem 0.6rem #ffffff); /* Long trail at TOP */
   }
 
   /* 5. BACK AT BOTTOM */
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 5px 2px #ffffff);
+    filter: drop-shadow(0 0.3rem 0.1rem #ffffff);
   }
 }
 
 
         .home-screen h1 span { color: var(--accent); }
-        .bookmarks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; max-width: 600px; }
+        .bookmarks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; max-width: 37.5rem; }
         .bookmark {
-            display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 0.6rem; cursor: pointer;
             transition: transform 0.2s;
         }
-        .bookmark:hover { transform: translateY(-5px); }
+        .bookmark:hover { transform: translateY(-0.3rem); }
         .icon-box {
-            width: 64px; height: 64px; background: var(--surface); border-radius: 16px;
-            display: flex; align-items: center; justify-content: center; font-size: 24px;
+            width: 4rem; height: 4rem; background: var(--surface); border-radius: 1rem;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
             border: 1px solid rgba(255,255,255,0.05); color: var(--accent);
         }
-        .bookmark span { font-size: 12px; font-weight: 500; color: var(--text-dim); }
+        .bookmark span { font-size: 0.75rem; font-weight: 500; color: var(--text-dim); }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
    
@@ -103,29 +103,29 @@
   /* 1. START AT BOTTOM: Moving UP */
   0% {
     transform: translateY(0);
-    filter: drop-shadow(0 5px 2px #ffffff); /* Trail starts behind (at bottom) */
+    filter: drop-shadow(0 0.3rem 0.1rem #ffffff); /* Trail starts behind (at bottom) */
   }
 
   /* 2. MID-WAY UP: Peak speed upward */
   25% {
-    filter: drop-shadow(0 25px 10px #ffffff); /* Long trail at bottom */
+    filter: drop-shadow(0 1.5rem 0.6rem #ffffff); /* Long trail at bottom */
   }
 
   /* 3. AT TOP: Switching directions */
   50% {
-    transform: translateY(-50px);
-    filter: drop-shadow(0 0 5px #ffffff); /* Trail resets as direction changes */
+    transform: translateY(-3rem);
+    filter: drop-shadow(0 0 0.3rem #ffffff); /* Trail resets as direction changes */
   }
 
   /* 4. MID-WAY DOWN: Peak speed downward */
   75% {
-    filter: drop-shadow(0 -25px 10px #ffffff); /* Long trail at TOP */
+    filter: drop-shadow(0 -1.5rem 0.6rem #ffffff); /* Long trail at TOP */
   }
 
   /* 5. BACK AT BOTTOM */
   100% {
     transform: translateY(0);
-    filter: drop-shadow(0 5px 2px #ffffff);
+    filter: drop-shadow(0 0.3rem 0.1rem #ffffff);
   }
 }
 
@@ -133,15 +133,15 @@
     background: transparent;
     border: none;
     color: var(--text-dim);
-    padding: 0 10px;
+    padding: 0 0.6rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 #nav-inspect:hover {
     color: var(--accent); /* #ffffff */
-    text-shadow: 0 0 10px var(--accent);
+    text-shadow: 0 0 0.6rem var(--accent);
 }
 
 /* Ensure the form doesn't squash the buttons */
@@ -157,27 +157,27 @@
 }
 .modal-content {
     background: var(--surface); border: 1px solid var(--accent);
-    padding: 20px; border-radius: 12px; width: 350px;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+    padding: 1.25rem; border-radius: 0.75rem; width: 90%; max-width: 21.875rem;
+    box-shadow: 0 0 1.25rem rgba(255, 255, 255, 0.15);
 }
-.modal-content h3 { color: var(--accent); margin-top: 0; }
+.modal-content h3 { color: var(--accent); margin-top: 0; font-size: 1.1rem; }
 .modal-content input {
     width: 100%; background: #000; border: 1px solid #333;
-    color: white; padding: 8px; margin: 10px 0; border-radius: 4px;
+    color: white; padding: 0.5rem; margin: 0.6rem 0; border-radius: 0.25rem; font-size: 0.9rem;
 }
 .modal-content input:focus { border-color: var(--accent); outline: none; }
-#bm-save { background: var(--accent); color: black; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
-#bm-cancel { background: transparent; color: white; border: none; margin-right: 10px; cursor: pointer; }
+#bm-save { background: var(--accent); color: black; border: none; padding: 0.5rem 0.9rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.9rem; }
+#bm-cancel { background: transparent; color: white; border: none; margin-right: 0.6rem; cursor: pointer; font-size: 0.9rem; }
 
 /* The Navigation Button */
 #nav-add-bookmark {
     background: transparent;
     border: none;
     color: var(--text-dim);
-    padding: 0 10px;
+    padding: 0 0.6rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 18px;
+    font-size: 1.125rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,15 +186,15 @@
 #nav-add-bookmark:hover {
     color: var(--accent); /* #ffffff */
     transform: scale(1.1);
-    filter: drop-shadow(0 0 8px var(--accent));
+    filter: drop-shadow(0 0 0.5rem var(--accent));
 }
 
 /* Modal Styling Enhancements */
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
 }
 
 /* Modal Buttons */
@@ -202,25 +202,27 @@
     background: var(--accent);
     color: #000;
     border: none;
-    padding: 8px 20px;
-    border-radius: 6px;
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.375rem;
     font-weight: 600;
     cursor: pointer;
     transition: opacity 0.2s;
+    font-size: 0.9rem;
 }
 
 #bm-save:hover {
     opacity: 0.9;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0.9rem rgba(255, 255, 255, 0.3);
 }
 
 #bm-cancel {
     background: rgba(255, 255, 255, 0.05);
     color: var(--text);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 8px 15px;
-    border-radius: 6px;
+    padding: 0.5rem 0.9rem;
+    border-radius: 0.375rem;
     cursor: pointer;
+    font-size: 0.9rem;
 }
 
 #bm-cancel:hover {
@@ -231,15 +233,16 @@
 .bookmark-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 5px 12px;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem;
     background: var(--surface);
-    border-radius: 6px;
+    border-radius: 0.375rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
     cursor: pointer;
     transition: all 0.2s;
     user-select: none;
-    max-width: 150px;
+    max-width: 9.375rem;
+    font-size: 0.8rem;
 }
 
 .bookmark-item:hover {
@@ -248,13 +251,14 @@
 }
 
 .bookmark-icon {
-    width: 16px;
-    height: 16px;
+    width: 1rem;
+    height: 1rem;
     pointer-events: none;
+    flex-shrink: 0;
 }
 
 .bookmark-item span {
-    font-size: 13px;
+    font-size: 0.8rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -299,10 +303,10 @@
   --danger-bg:    rgba(255, 92, 92, 0.12);
 
   /* Geometry */
-  --r-tab:        8px 8px 0 0;
-  --r-sm:         6px;
-  --r-md:         10px;
-  --r-pill:       100px;
+  --r-tab:        0.5rem 0.5rem 0 0;
+  --r-sm:         0.375rem;
+  --r-md:         0.625rem;
+  --r-pill:       6.25rem;
 
   /* Motion */
   --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
@@ -318,12 +322,12 @@
 /* ─── KEYFRAMES (compositor-only: transform + opacity) ──────────────── */
 
 @keyframes slide-down {
-  from { opacity: 0; transform: translateY(-6px); }
+  from { opacity: 0; transform: translateY(-0.4rem); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes tab-in {
-  from { opacity: 0; transform: scaleX(0.85) translateY(4px); transform-origin: left center; }
+  from { opacity: 0; transform: scaleX(0.85) translateY(0.25rem); transform-origin: left center; }
   to   { opacity: 1; transform: scaleX(1)    translateY(0);   }
 }
 
@@ -351,8 +355,8 @@
 
 @keyframes aurora-drift {
   0%   { transform: translate(0, 0)    rotate(0deg);   }
-  33%  { transform: translate(4px, -3px) rotate(1deg); }
-  66%  { transform: translate(-3px, 2px) rotate(-1deg);}
+  33%  { transform: translate(0.25rem, -0.2rem) rotate(1deg); }
+  66%  { transform: translate(-0.2rem, 0.125rem) rotate(-1deg);}
   100% { transform: translate(0, 0)    rotate(0deg);   }
 }
 
@@ -371,6 +375,7 @@ body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-size: 16px;
 }
 
 /* ─── BROWSER SHELL ─────────────────────────────────────────────────── */
@@ -387,9 +392,9 @@ body {
 #tabs-strip {
   display: flex;
   align-items: flex-end;
-  padding: 10px 8px 0;
+  padding: 0.625rem 0.5rem 0;
   background: var(--void);
-  gap: 3px;
+  gap: 0.2rem;
   overflow-x: auto;
   scrollbar-width: none;
   position: relative;
@@ -410,15 +415,15 @@ body {
 .tab {
   display: flex;
   align-items: center;
-  padding: 8px 14px 9px;
+  padding: 0.5rem 0.875rem 0.56rem;
   background: transparent;
   border-radius: var(--r-tab);
   border: 1px solid transparent;
   border-bottom: none;
-  max-width: 210px;
-  min-width: 120px;
+  max-width: 13.125rem;
+  min-width: 7.5rem;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 400;
   cursor: pointer;
   user-select: none;
@@ -464,7 +469,7 @@ body {
 }
 
 .tab:active {
-  transform: translateY(1px);
+  transform: translateY(0.06rem);
 }
 
 /* Active tab */
@@ -480,16 +485,16 @@ body {
 .tab.active::after {
   content: "";
   position: absolute;
-  top: 0; left: 12px; right: 12px;
-  height: 2px;
+  top: 0; left: 0.75rem; right: 0.75rem;
+  height: 0.125rem;
   background: linear-gradient(90deg, var(--aurora-1), var(--aurora-2));
-  border-radius: 0 0 3px 3px;
+  border-radius: 0 0 0.2rem 0.2rem;
 }
 
 /* Active tab — cover the bottom border of strip */
 .tab.active {
   margin-bottom: -1px;
-  padding-bottom: 10px;
+  padding-bottom: 0.625rem;
 }
 
 .tab-title {
@@ -497,7 +502,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
-  margin-right: 6px;
+  margin-right: 0.375rem;
   letter-spacing: 0.015em;
 }
 
@@ -506,10 +511,10 @@ body {
   background: transparent;
   color: var(--text-ghost);
   cursor: pointer;
-  font-size: 11px;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
+  font-size: 0.7rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -542,16 +547,16 @@ body {
   background: transparent;
   border: none;
   color: var(--text-ghost);
-  width: 30px;
-  height: 30px;
+  width: 1.875rem;
+  height: 1.875rem;
   border-radius: 50%;
   cursor: pointer;
-  margin-bottom: 3px;
+  margin-bottom: 0.2rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 1rem;
   transition:
     background  var(--t-mid),
     color       var(--t-mid),
@@ -572,10 +577,10 @@ body {
 
 #nav-bar {
   background: var(--base);
-  padding: 7px 10px 6px;
+  padding: 0.44rem 0.625rem 0.375rem;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   border-bottom: 1px solid var(--border-dim);
   position: relative;
 }
@@ -594,7 +599,7 @@ body {
 
 .nav-controls {
   display: flex;
-  gap: 2px;
+  gap: 0.125rem;
 }
 
 .nav-controls button,
@@ -602,7 +607,7 @@ body {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 6px;
+  padding: 0.375rem;
   border-radius: var(--r-sm);
   cursor: pointer;
   display: flex;
@@ -613,6 +618,7 @@ body {
     color       var(--t-mid),
     transform   var(--t-fast);
   position: relative;
+  font-size: 0.9rem;
 }
 
 .nav-controls button:hover,
@@ -641,17 +647,18 @@ body {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   background: var(--void);
   border: 1px solid var(--border-dim);
   border-radius: var(--r-pill);
-  padding: 0 14px;
-  height: 32px;
+  padding: 0 0.875rem;
+  height: 2rem;
   position: relative;
   overflow: hidden;
   transition:
     border-color  var(--t-mid),
     background    var(--t-mid);
+  margin: 0 0.5rem;
 }
 
 /* Shimmer sweep on focus */
@@ -659,9 +666,9 @@ body {
   content: "";
   position: absolute;
   top: 0; bottom: 0;
-  width: 60px;
+  width: 3.75rem;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-  transform: translateX(-80px);
+  transform: translateX(-5rem);
   pointer-events: none;
   transition: none;
 }
@@ -672,7 +679,7 @@ body {
 }
 
 #sj-form:focus-within::after {
-  transform: translateX(600px);
+  transform: translateX(37.5rem);
   transition: transform 500ms var(--ease-out);
 }
 
@@ -682,7 +689,7 @@ body {
   border: none;
   color: var(--text-bright);
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 0.8rem;
   font-weight: 400;
   outline: none;
   letter-spacing: 0.01em;
@@ -698,7 +705,7 @@ body {
 
 /* Protocol badge */
 #sj-protocol {
-  font-size: 11px;
+  font-size: 0.7rem;
   color: var(--aurora-3);
   font-family: var(--font-display);
   font-weight: 500;
@@ -712,7 +719,7 @@ body {
 #loading-bar {
   position: absolute;
   bottom: 0; left: 0;
-  height: 2px;
+  height: 0.125rem;
   width: 0%;
   background: linear-gradient(90deg, var(--aurora-1), var(--aurora-2), var(--aurora-3));
   transition: width 200ms var(--ease-out);
@@ -735,7 +742,7 @@ body {
   content: "";
   position: absolute;
   top: 0; bottom: 0;
-  width: 80px;
+  width: 5rem;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
   animation: shimmer-bar 1.2s linear infinite;
 }
@@ -746,10 +753,10 @@ body {
   display: flex;
   align-items: center;
   background: var(--base);
-  padding: 3px 12px 5px;
-  gap: 1px;
+  padding: 0.2rem 0.75rem 0.3rem;
+  gap: 0.06rem;
   border-bottom: 1px solid var(--border-dim);
-  min-height: 28px;
+  min-height: 1.75rem;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -759,11 +766,11 @@ body {
 .bookmark-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
+  gap: 0.3rem;
+  padding: 0.2rem 0.625rem;
   border-radius: var(--r-sm);
   cursor: pointer;
-  font-size: 11.5px;
+  font-size: 0.7rem;
   font-weight: 400;
   color: var(--text-muted);
   text-decoration: none;
@@ -779,7 +786,7 @@ body {
 .bookmark-item:hover {
   background: var(--surface);
   color: var(--text);
-  transform: translateY(-1px);
+  transform: translateY(-0.06rem);
 }
 
 .bookmark-item:active {
@@ -787,8 +794,8 @@ body {
 }
 
 .bookmark-icon {
-  width: 13px;
-  height: 13px;
+  width: 0.8rem;
+  height: 0.8rem;
   flex-shrink: 0;
   opacity: 0.75;
   transition: opacity var(--t-mid);
@@ -801,9 +808,9 @@ body {
 /* Bookmark bar separator */
 .bookmark-sep {
   width: 1px;
-  height: 14px;
+  height: 0.875rem;
   background: var(--border-dim);
-  margin: 0 4px;
+  margin: 0 0.25rem;
   flex-shrink: 0;
 }
 
@@ -852,20 +859,20 @@ iframe.sj-frame {
 }
 
 .home-view::before {
-  width: 500px;
-  height: 300px;
+  width: 31.25rem;
+  height: 18.75rem;
   background: radial-gradient(ellipse, rgba(255,255,255,0.08) 0%, transparent 70%);
-  top: -80px;
+  top: -5rem;
   left: 50%;
   transform: translateX(-50%);
   animation: aurora-drift 8s var(--ease-in-out) infinite;
 }
 
 .home-view::after {
-  width: 400px;
-  height: 250px;
+  width: 25rem;
+  height: 15.625rem;
   background: radial-gradient(ellipse, rgba(200,200,200,0.07) 0%, transparent 70%);
-  bottom: -60px;
+  bottom: -3.75rem;
   right: 10%;
   animation: aurora-drift 11s var(--ease-in-out) infinite reverse;
 }
@@ -877,10 +884,10 @@ iframe.sj-frame {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-pill);
-  padding: 0 20px;
-  height: 46px;
-  width: min(580px, 90%);
-  gap: 10px;
+  padding: 0 1.25rem;
+  height: 2.875rem;
+  width: min(90vw, 36.25rem);
+  gap: 0.625rem;
   position: relative;
   z-index: 1;
   transition: border-color var(--t-mid), background var(--t-mid);
@@ -893,11 +900,11 @@ iframe.sj-frame {
 
 .home-title {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--text-bright);
-  margin-bottom: 28px;
+  margin-bottom: 1.75rem;
   position: relative;
   z-index: 1;
 
@@ -914,16 +921,16 @@ iframe.sj-frame {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
-::-webkit-scrollbar           { width: 5px; height: 5px; }
+::-webkit-scrollbar           { width: 0.3rem; height: 0.3rem; }
 ::-webkit-scrollbar-track     { background: transparent; }
-::-webkit-scrollbar-thumb     { background: var(--border-dim); border-radius: 3px; }
+::-webkit-scrollbar-thumb     { background: var(--border-dim); border-radius: 0.2rem; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border); }
 
 /* ─── FOCUS VISIBLE ─────────────────────────────────────────────────── */
 
 :focus-visible {
-  outline: 2px solid var(--aurora-1);
-  outline-offset: 2px;
+  outline: 0.125rem solid var(--aurora-1);
+  outline-offset: 0.125rem;
   border-radius: var(--r-sm);
 }
 
@@ -931,8 +938,8 @@ iframe.sj-frame {
 
 /* Status dot (e.g. on tab favicon area) */
 .status-dot {
-  width: 6px;
-  height: 6px;
+  width: 0.375rem;
+  height: 0.375rem;
   border-radius: 50%;
   background: var(--aurora-3);
   animation: pulse-dot 2s ease-in-out infinite;
@@ -946,14 +953,14 @@ iframe.sj-frame {
 [data-tip]::after {
   content: attr(data-tip);
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 0.375rem);
   left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  transform: translateX(-50%) translateY(0.25rem);
   background: var(--overlay);
   color: var(--text);
-  font-size: 11px;
+  font-size: 0.7rem;
   font-family: var(--font-body);
-  padding: 4px 8px;
+  padding: 0.25rem 0.5rem;
   border-radius: var(--r-sm);
   border: 1px solid var(--border);
   white-space: nowrap;
@@ -965,6 +972,111 @@ iframe.sj-frame {
 [data-tip]:hover::after {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .tab {
+    max-width: 10rem;
+    min-width: 6rem;
+    font-size: 0.65rem;
+  }
+
+  .home-screen h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .home-screen img {
+    width: 7rem;
+    height: 7rem;
+  }
+
+  .bookmarks {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .icon-box {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.2rem;
+  }
+
+  .home-title {
+    font-size: 1.4rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .home-search {
+    height: 2.3rem;
+    padding: 0 1rem;
+    border-radius: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 12px;
+  }
+
+  .tab {
+    max-width: 7.5rem;
+    min-width: 5rem;
+    font-size: 0.55rem;
+    padding: 0.4rem 0.6rem 0.5rem;
+  }
+
+  .home-screen h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .home-screen img {
+    width: 5rem;
+    height: 5rem;
+  }
+
+  .bookmarks {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+
+  .icon-box {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1rem;
+  }
+
+  .home-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .home-search {
+    height: 2rem;
+    padding: 0 0.75rem;
+  }
+
+  #nav-bar {
+    padding: 0.3rem 0.4rem 0.25rem;
+  }
+
+  .nav-controls button,
+  #nav-bookmark {
+    padding: 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  #sj-form {
+    height: 1.8rem;
+    margin: 0 0.25rem;
+  }
 }
 </style>
   </head>
@@ -987,6 +1099,10 @@ iframe.sj-frame {
     <input id="sj-address" type="text" placeholder="Search Google or type a URL" autocomplete="off" />
     <button type="button" id="nav-bookmark"><i class="fa-regular fa-star"></i></button>
     <button type="button" id="nav-inspect" title="Developer Tools"><i class="fa-solid fa-code"></i></button>
+<select id="proxy-select" title="Proxy backend" style="margin:0 0.5rem;padding:0.15rem;">
+  <option value="scramjet">Scramjet</option>
+  <option value="ultraviolet">Ultraviolet</option>
+</select>
 <button type="button" id="nav-add-bookmark" title="Create Custom Bookmark">
     <i class="fa-solid fa-plus-circle"></i>
 </button>
