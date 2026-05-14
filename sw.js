@@ -116,6 +116,8 @@ async function handleRequest(event) {
     const engine = currentEngine;
     const url = event.request.url;
     
+    console.log(`[SW] Request to ${url} with engine ${engine}`);
+    
     try {
         if (engine === "scramjet") {
             const sj = initScramjet();
@@ -128,22 +130,29 @@ async function handleRequest(event) {
         } else if (engine === "uv") {
             const uv = initUV();
             
+            // Check if request URL includes the UV prefix
+            const hasUVPrefix = url.includes(__uv$config.prefix);
+            console.log(`[SW:UV] URL has prefix: ${hasUVPrefix}, checking route...`);
+            
             // If request is to the UV prefix, MUST route through UV (don't fall back)
-            if (url.includes(__uv$config.prefix)) {
-                console.log(`[SW:UV] Routing ${url}`);
+            if (hasUVPrefix) {
+                console.log(`[SW:UV] FORCING route for ${url}`);
                 try {
-                    return uv.fetch({ request: event.request });
+                    const response = await uv.fetch({ request: event.request });
+                    console.log(`[SW:UV] Fetch success`);
+                    return response;
                 } catch (e) {
                     console.error(`[SW:UV] Fetch error:`, e);
-                    return new Response("UV fetch failed", { status: 500 });
+                    return new Response("UV proxy error: " + e.message, { status: 502 });
                 }
             }
             
             // For non-prefixed requests, check if UV should handle it
             try {
                 const shouldRoute = uv.route({ request: event.request });
+                console.log(`[SW:UV] Should route (non-prefixed): ${shouldRoute}`);
                 if (shouldRoute) {
-                    console.log(`[SW:UV] Routing ${url}`);
+                    console.log(`[SW:UV] Routing non-prefixed ${url}`);
                     return uv.fetch({ request: event.request });
                 }
             } catch (e) {

@@ -282,8 +282,13 @@ if (searchEngineSelector) {
 
 // --- NAVIGATION ---
 async function navigateToUrl(inputUrl) {
+    console.log(`📍 navigateToUrl called with: ${inputUrl}`);
+    
     const currentTab = tabs.find(t => t.id === activeTabId);
-    if (!currentTab) return;
+    if (!currentTab) {
+        console.error("❌ No active tab found");
+        return;
+    }
 
     const normalizeUrl = (url) => {
         if (!url.startsWith("http")) return "https://" + url;
@@ -291,6 +296,7 @@ async function navigateToUrl(inputUrl) {
     };
 
     const url = search(inputUrl) || normalizeUrl(inputUrl);
+    console.log(`📍 After normalization: ${url}, engine: ${proxyEngine}`);
 
     // Ensure service worker is ready before navigating
     if (navigator.serviceWorker) {
@@ -410,7 +416,13 @@ async function navigateToUrl(inputUrl) {
         currentTab.faviconEl.src = getFaviconUrl(url);
     }
     
-    updateBookmarkIcon();
+    try {
+        updateBookmarkIcon();
+    } catch (e) {
+        console.error("❌ updateBookmarkIcon error:", e);
+    }
+    
+    console.log(`✅ Navigation complete to ${url}`);
 }
 
 // --- BOOKMARKS ---
