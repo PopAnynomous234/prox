@@ -213,42 +213,37 @@ if (engineSelector) {
             try {
                 const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
                 console.log("✅ Service Worker registered");
-                let newController = null;
-                window.location.reload(); // Force reload to ensure new SW takes control
                 
-                // If there's already an active SW, wait for it to change
+                // Wait for the new SW to become active
+                await new Promise((resolve) => {
+                    if (registration.active) {
+                        // Already active
+                        resolve();
+                    } else {
+                        // Wait for it to become active
+                        const checkActive = setInterval(() => {
+                            if (registration.active) {
+                                clearInterval(checkActive);
+                                resolve();
+                            }
+                        }, 50);
+                        // Timeout after 3 seconds
+                        setTimeout(() => {
+                            clearInterval(checkActive);
+                            resolve();
+                        }, 3000);
+                    }
+                });
+                
+                console.log("✅ New service worker is active");
+                
+                // Notify the active controller of engine change
                 if (navigator.serviceWorker.controller) {
-                    newController = await new Promise((resolve) => {
-                        navigator.serviceWorker.addEventListener('controllerchange', () => {
-                            resolve(navigator.serviceWorker.controller);
-                        }, { once: true });
-                    });
-                } else {
-                    // If no active SW yet, wait for the registered one to activate
-                    newController = await new Promise((resolve) => {
-                        registration.addEventListener('updatefound', () => {
-                            const installingWorker = registration.installing;
-                            installingWorker.addEventListener('statechange', () => {
-                                if (installingWorker.state === 'activated') {
-                                    resolve(navigator.serviceWorker.controller);
-                                }
-                            });
-                        });
-                        // Also set up a timeout in case update is immediate
-                        setTimeout(() => resolve(navigator.serviceWorker.controller), 1000);
-                    });
-                }
-                
-                console.log("✅ New service worker is active and controlling the page");
-                
-                // Notify controller of engine change
-                if (newController) {
-                    newController.postMessage({
+                    navigator.serviceWorker.controller.postMessage({
                         type: "setEngine",
                         engine: newEngine
                     });
                     console.log("✅ Engine preference sent to service worker");
-
                 }
             } catch (err) {
                 console.error("❌ Failed to register service worker:", err);
@@ -391,11 +386,12 @@ async function navigateToUrl(inputUrl) {
                 currentTab.iframe.frame.src = url;
             } else {
                 const encodedUrl = __uv$config.prefix + __uv$config.encodeUrl(url);
+                const fullUrl = new URL(encodedUrl, location.origin).href;
                 console.log("Original URL:", url);
                 console.log("UV Config Prefix:", __uv$config.prefix);
                 console.log("Encoded URL:", encodedUrl);
-                console.log("Full URL:", new URL(encodedUrl, location.origin).href);
-                currentTab.iframe.frame.src = encodedUrl;
+                console.log("Full URL:", fullUrl);
+                currentTab.iframe.frame.src = fullUrl;
             }
         } catch (e) {
             console.error("UV navigation failed:", e);

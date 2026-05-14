@@ -40,8 +40,8 @@ async function setEnginePreference(engine) {
     }
 }
 
-// Initialize engine on startup
-(async () => {
+// Initialize engine on startup and store the promise
+let engineInitPromise = (async () => {
     currentEngine = await getEnginePreference();
     console.log(`🚀 Service Worker initialized with engine: ${currentEngine}`);
 })();
@@ -128,14 +128,23 @@ async function handleRequest(event) {
         } else if (engine === "uv") {
             const uv = initUV();
             
-            // Check if this request should be routed through UV
+            // If request is to the UV prefix, MUST route through UV (don't fall back)
+            if (url.includes(__uv$config.prefix)) {
+                console.log(`[SW:UV] Routing ${url}`);
+                try {
+                    return uv.fetch({ request: event.request });
+                } catch (e) {
+                    console.error(`[SW:UV] Fetch error:`, e);
+                    return new Response("UV fetch failed", { status: 500 });
+                }
+            }
+            
+            // For non-prefixed requests, check if UV should handle it
             try {
                 const shouldRoute = uv.route({ request: event.request });
                 if (shouldRoute) {
                     console.log(`[SW:UV] Routing ${url}`);
                     return uv.fetch({ request: event.request });
-                } else {
-                    console.log(`[SW:UV] Not routing (prefix check failed) ${url}`);
                 }
             } catch (e) {
                 console.error(`[SW:UV] Route check error:`, e);
@@ -145,7 +154,7 @@ async function handleRequest(event) {
         console.error(`[SW] Error handling ${engine} request:`, e);
     }
     
-    // Fallback to regular fetch
+    // Fallback to regular fetch (only for non-proxied requests)
     console.log(`[SW] Fallback fetch for ${url}`);
     return fetch(event.request);
 }
