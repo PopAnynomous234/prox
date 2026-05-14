@@ -7,10 +7,16 @@
     <title>Nebula Browser</title>
 
     <script src="/prox/scram/scramjet.all.js"></script>
+    <script src="/prox/uv/uv.bundle.js"></script>
+    <script src="/prox/uv/uv.config.js"></script>
     <script src="/prox/baremux/index.js"></script>
     <script src="/prox.js" defer></script>
     <script src="/register.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
         :root {
             --accent: #ffffff;
@@ -24,7 +30,7 @@
   .home-screen {
     /* Combined: The gradient (top layer) and the Image (bottom layer) */
     background: radial-gradient(circle at center, rgba(26, 28, 30, 0.4) 0%, rgba(15, 17, 19, 0.9) 100%),
-                url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0cGbPBXXBzxKhsF5gWmHd5qbaPG5BVitiNw&s');
+                url('data:image/jpeg;base64,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');
    
     background-size: cover;
     background-position: center;
@@ -40,46 +46,16 @@
     overflow: hidden;
 }
 
-        .home-screen h1 { font-size: 3rem; margin-bottom: 2rem; letter-spacing: -0.05em; }
+        .home-screen h1 { font-size: 3rem; margin-bottom: 2rem; letter-spacing: -0.05em; font-family: 'JetBrains Mono', monospace; }
 .home-screen h3 {
    color:#ffffff;
    font-size: 1.2rem;
+   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 .home-screen img {
    width: 10rem;
    height: 10rem;
-   /* A 1.2s total cycle (0.6s up, 0.6s down) works well for visibility */
-   animation: up-down-trail 2s ease-in-out infinite;
-}
-
-@keyframes up-down-trail {
-  /* 1. START AT BOTTOM: Moving UP */
-  0% {
-    transform: translateY(0);
-    filter: drop-shadow(0 0.3rem 0.1rem #ffffff); /* Trail starts behind (at bottom) */
-  }
-
-  /* 2. MID-WAY UP: Peak speed upward */
-  25% {
-    filter: drop-shadow(0 1.5rem 0.6rem #ffffff); /* Long trail at bottom */
-  }
-
-  /* 3. AT TOP: Switching directions */
-  50% {
-    transform: translateY(-3rem);
-    filter: drop-shadow(0 0 0.3rem #ffffff); /* Trail resets as direction changes */
-  }
-
-  /* 4. MID-WAY DOWN: Peak speed downward */
-  75% {
-    filter: drop-shadow(0 -1.5rem 0.6rem #ffffff); /* Long trail at TOP */
-  }
-
-  /* 5. BACK AT BOTTOM */
-  100% {
-    transform: translateY(0);
-    filter: drop-shadow(0 0.3rem 0.1rem #ffffff);
-  }
+   filter: drop-shadow(0 10px 15px rgba(255, 255, 255, 0.5));
 }
 
 
@@ -99,35 +75,6 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
    
-      @keyframes up-down-trail {
-  /* 1. START AT BOTTOM: Moving UP */
-  0% {
-    transform: translateY(0);
-    filter: drop-shadow(0 0.3rem 0.1rem #ffffff); /* Trail starts behind (at bottom) */
-  }
-
-  /* 2. MID-WAY UP: Peak speed upward */
-  25% {
-    filter: drop-shadow(0 1.5rem 0.6rem #ffffff); /* Long trail at bottom */
-  }
-
-  /* 3. AT TOP: Switching directions */
-  50% {
-    transform: translateY(-3rem);
-    filter: drop-shadow(0 0 0.3rem #ffffff); /* Trail resets as direction changes */
-  }
-
-  /* 4. MID-WAY DOWN: Peak speed downward */
-  75% {
-    filter: drop-shadow(0 -1.5rem 0.6rem #ffffff); /* Long trail at TOP */
-  }
-
-  /* 5. BACK AT BOTTOM */
-  100% {
-    transform: translateY(0);
-    filter: drop-shadow(0 0.3rem 0.1rem #ffffff);
-  }
-}
 
 #nav-inspect {
     background: transparent;
@@ -441,6 +388,15 @@ body {
   animation: tab-in var(--t-slow) var(--ease-out) both;
 }
 
+.tab-favicon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.375rem;
+  border-radius: 0.15rem;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
 /* Tab shimmer on hover — cheap pseudo-element sweep */
 .tab::before {
   content: "";
@@ -712,6 +668,117 @@ body {
   letter-spacing: 0.04em;
   flex-shrink: 0;
   opacity: 0.8;
+}
+
+/* ─── ENGINE SELECTOR ──────────────────────────────────────────────── */
+
+#engine-selector {
+  background: var(--surface);
+  border: 1px solid var(--border-dim);
+  color: var(--text);
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.3rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 200ms var(--ease-out);
+  margin: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+#engine-selector:hover {
+  border-color: var(--accent);
+  background: var(--elevated);
+  color: var(--accent);
+}
+
+#engine-selector:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.2);
+}
+
+#engine-selector option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* ─── FULLSCREEN BUTTON ─────────────────────────────────────────────── */
+
+#fullscreen-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.375rem;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition:
+    background  var(--t-mid),
+    color       var(--t-mid),
+    transform   var(--t-fast);
+  position: relative;
+  flex-shrink: 0;
+}
+
+#fullscreen-toggle:hover {
+  background: var(--surface);
+  color: var(--text-bright);
+}
+
+#fullscreen-toggle:active {
+  transform: scale(0.88);
+}
+
+#fullscreen-toggle i {
+  pointer-events: none;
+}
+
+#fullscreen-toggle .fs-fallback {
+  display: none;
+}
+
+/* Show fallback only if SVG icon fails to load */
+#fullscreen-toggle:has(> i:empty) .fs-fallback {
+  display: inline-block;
+  font-size: 1rem;
+  line-height: 1;
+  color: inherit;
+  pointer-events: none;
+}
+
+#search-engine-selector {
+  background: var(--surface);
+  border: 1px solid var(--border-dim);
+  color: var(--text);
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.3rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 200ms var(--ease-out);
+  margin: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+#search-engine-selector:hover {
+  border-color: var(--accent);
+  background: var(--elevated);
+  color: var(--accent);
+}
+
+#search-engine-selector:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.2);
+}
+
+#search-engine-selector option {
+  background: var(--surface);
+  color: var(--text);
 }
 
 /* ─── LOADING BAR ───────────────────────────────────────────────────── */
@@ -1078,44 +1145,299 @@ iframe.sj-frame {
     margin: 0 0.25rem;
   }
 }
+
+/* ─── SMALL HEIGHT SCREENS (Chromebooks, etc.) ─── */
+@media (max-height: 600px) {
+  body {
+    font-size: 11px;
+  }
+
+  #tabs-strip {
+    padding: 0.25rem 0.3rem 0;
+    gap: 0.1rem;
+  }
+
+  .tab {
+    padding: 0.25rem 0.5rem 0.3rem;
+    font-size: 0.55rem;
+    min-width: 5rem;
+    max-width: 10rem;
+  }
+
+  .tab-favicon {
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-right: 0.25rem;
+  }
+
+  #nav-bar {
+    padding: 0.25rem 0.4rem 0.2rem;
+    gap: 0.2rem;
+  }
+
+  .nav-controls button,
+  #nav-bookmark,
+  #nav-inspect,
+  #nav-add-bookmark,
+  #fullscreen-toggle {
+    padding: 0.2rem;
+    font-size: 0.75rem;
+  }
+
+  #sj-form {
+    gap: 0.25rem;
+  }
+
+  #sj-address,
+  #search-engine-selector,
+  #engine-selector {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.5rem;
+    height: 1.5rem;
+  }
+
+  .home-screen {
+    padding: 1rem;
+  }
+
+  .home-screen h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .home-screen h3 {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .home-screen img {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .bookmarks {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .icon-box {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.9rem;
+    border-radius: 0.5rem;
+  }
+
+  .bookmark span {
+    font-size: 0.6rem;
+  }
+
+  #bookmark-bar {
+    padding: 0.18rem 0.35rem 0.22rem;
+    min-height: 1.4rem;
+    gap: 0.14rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 3.2rem;
+  }
+
+  .bookmark-item {
+    padding: 0.16rem 0.35rem;
+    font-size: 0.62rem;
+    gap: 0.22rem;
+    min-width: 0;
+    max-width: 40vw;
+  }
+
+  .bookmark-item span {
+    max-width: 30vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .bookmark-icon {
+    width: 0.66rem;
+    height: 0.66rem;
+  }
+
+  .modal-content {
+    padding: 0.8rem;
+    width: 95%;
+  }
+
+  .modal-content h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-content input {
+    padding: 0.3rem;
+    font-size: 0.8rem;
+    margin: 0.4rem 0;
+  }
+
+  #bm-save,
+  #bm-cancel {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-height: 450px) {
+  body {
+    font-size: 10px;
+  }
+
+  #tabs-strip {
+    padding: 0.2rem 0.2rem 0;
+  }
+
+  .tab {
+    padding: 0.2rem 0.4rem 0.25rem;
+    font-size: 0.5rem;
+    min-width: 4.5rem;
+  }
+
+  .tab-favicon {
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-right: 0.2rem;
+  }
+
+  #nav-bar {
+    padding: 0.2rem 0.3rem 0.15rem;
+    gap: 0.15rem;
+  }
+
+  .nav-controls button,
+  #nav-bookmark,
+  #nav-inspect,
+  #nav-add-bookmark,
+  #fullscreen-toggle {
+    padding: 0.15rem;
+    font-size: 0.65rem;
+  }
+
+  #sj-address,
+  #search-engine-selector,
+  #engine-selector {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.4rem;
+    height: 1.3rem;
+  }
+
+  .home-screen h1 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .home-screen h3 {
+    font-size: 0.65rem;
+  }
+
+  .home-screen img {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  #bookmark-bar {
+    padding: 0.14rem 0.28rem 0.18rem;
+    min-height: 1.2rem;
+    gap: 0.1rem;
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 2.6rem;
+  }
+
+  .bookmark-item {
+    padding: 0.12rem 0.28rem;
+    font-size: 0.56rem;
+    gap: 0.18rem;
+    max-width: 44vw;
+  }
+
+  .bookmark-item span {
+    max-width: 32vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .bookmark-icon {
+    width: 0.58rem;
+    height: 0.58rem;
+  }
+
+  /* Fullscreen toggle button inside bookmark bar */
+  .bookmarks {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.3rem;
+  }
+
+  .icon-box {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.8rem;
+  }
+
+  .bookmark span {
+    font-size: 0.5rem;
+  }
+}
 </style>
   </head>
 
   <body>
     <div id="browser-ui">
       <div id="tabs-strip">
-        <button id="add-tab-btn" title="New Tab"><i class="fa-solid fa-plus"></i></button>
+        <button id="add-tab-btn" title="New Tab"><i data-lucide="plus"></i></button>
       </div>
 
       <div id="nav-bar">
         <div class="nav-controls">
-          <button id="nav-back"><i class="fa-solid fa-arrow-left"></i></button>
-          <button id="nav-forward"><i class="fa-solid fa-arrow-right"></i></button>
-          <button id="nav-reload"><i class="fa-solid fa-rotate-right"></i></button>
+          <button id="nav-back"><i data-lucide="chevron-left"></i></button>
+          <button id="nav-forward"><i data-lucide="chevron-right"></i></button>
+          <button id="nav-reload"><i data-lucide="rotate-cw"></i></button>
         </div>
 
 <form id="sj-form">
-    <input id="sj-search-engine" type="hidden" value="https://www.duckduckgo.com/search?q=%s" />
     <input id="sj-address" type="text" placeholder="Search Google or type a URL" autocomplete="off" />
-    <button type="button" id="nav-bookmark"><i class="fa-regular fa-star"></i></button>
-    <button type="button" id="nav-inspect" title="Developer Tools"><i class="fa-solid fa-code"></i></button>
-<button type="button" id="nav-add-bookmark" title="Create Custom Bookmark">
-    <i class="fa-solid fa-plus-circle"></i>
-</button>
+    <select id="search-engine-selector" title="Search Engine">
+        <option value="duckduckgo">DuckDuckGo</option>
+        <option value="google">Google</option>
+        <option value="bing">Bing</option>
+        <option value="yahoo">Yahoo</option>
+    </select>
+    <select id="engine-selector" title="Proxy Engine">
+        <option value="scramjet">Scramjet</option>
+        <option value="uv">UV</option>
+    </select>
+    <button type="button" id="nav-bookmark"><i data-lucide="star"></i></button>
+    <button type="button" id="fullscreen-toggle" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+        <i data-lucide="maximize-2"></i>
+    </button>
+    <button type="button" id="nav-inspect" title="Developer Tools"><i data-lucide="code"></i></button>
 </form>
       </div>
 
       <div id="bookmark-bar">
-</div>
+      </div>
     </div>
 
     <div id="webview-container">
         <div id="home-template" class="home-view" style="display: none;">
 <div class="home-screen">
-                <img src="https://cdn.jsdelivr.net/gh/asemits/starlight/public/static/logo.png" alt="Nebula Logo" style="width:120px; height:auto; animation: up-down-trail 3s ease-in-out infinite;">
+  <br>
+                <img src="https://cdn.jsdelivr.net/gh/asemits/starlight/public/static/logo.png" alt="Nebula Logo" style=" width:8%; height:19%; ">
                     <h1>Nebula<span> Browser</span></h1>
                     <h3>No restrictions, no censorship. Just browse freely with peace of mind.</h3>
-                    <br>
                     <div class="bookmarks">
                         <div class="bookmark" onclick="navigateToUrl('google.com')"><div class="icon-box"><i class="fa-brands fa-google"></i></div><span>Google</span></div>
                         <div class="bookmark" onclick="navigateToUrl('youtube.com')"><div class="icon-box"><i class="fa-brands fa-youtube"></i></div><span>YouTube</span></div>
@@ -1142,6 +1464,13 @@ iframe.sj-frame {
     </div>
   </div>
   <script>
+   lucide.createIcons({
+    attrs: {
+        width: 16,
+        height: 16,
+        'stroke-width': 2
+    }
+});
 	"use strict";
 /**
  *

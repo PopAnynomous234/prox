@@ -1,18 +1,152 @@
+// Load both proxy engines
 importScripts("/prox/scram/scramjet.all.js");
+importScripts("/prox/baremux/index.js");
+importScripts("/prox/uv/uv.bundle.js");
+importScripts("/prox/uv/uv.config.js");
+importScripts("/prox/uv/uv.sw.js");
 
 const { ScramjetServiceWorker } = $scramjetLoadWorker();
 
-const scramjet = new ScramjetServiceWorker({
-    prefix: "/scramjet/"
+// Determine which engine to use - check cache first
+let currentEngine = "scramjet";
+let scramjet = null;
+let uvSW = null;
+
+// Try to read engine preference from cache or initialize
+async function getEnginePreference() {
+    try {
+        const cache = await caches.open("nebula-config");
+        const response = await cache.match("engine-preference");
+        if (response) {
+            const data = await response.json();
+            return data.engine || "scramjet";
+        }
+    } catch (e) {
+        console.log("Cache read failed:", e);
+    }
+    return "scramjet";
+}
+
+// Save engine preference to cache
+async function setEnginePreference(engine) {
+    try {
+        const cache = await caches.open("nebula-config");
+        const response = new Response(JSON.stringify({ engine }), {
+            headers: { "Content-Type": "application/json" }
+        });
+        await cache.put("engine-preference", response);
+    } catch (e) {
+        console.error("Cache write failed:", e);
+    }
+}
+
+// Initialize engine on startup
+(async () => {
+    currentEngine = await getEnginePreference();
+    console.log(`🚀 Service Worker initialized with engine: ${currentEngine}`);
+})();
+
+// Initialize UV cookies storage
+self.__uv$cookies = "";
+
+// Initialize Scramjet
+function initScramjet() {
+    if (!scramjet) {
+        scramjet = new ScramjetServiceWorker({
+            prefix: "/scramjet/"
+        });
+        console.log("Scramjet initialized");
+    }
+    return scramjet;
+}
+
+// Initialize UV
+function initUV() {
+    if (!uvSW) {
+        // Make sure cookies are initialized
+        if (!self.__uv$cookies) {
+            self.__uv$cookies = "";
+        }
+        
+        // Create UV service worker with config
+        try {
+            uvSW = new UVServiceWorker(__uv$config);
+            console.log("UV Service Worker initialized with config:", __uv$config);
+        } catch (e) {
+            console.error("Failed to initialize UV Service Worker:", e);
+            throw e;
+        }
+    }
+    return uvSW;
+}
+
+// Listen for engine change notifications from main thread
+self.addEventListener("message", async (event) => {
+    if (event.data?.type === "setEngine") {
+        const newEngine = event.data.engine;
+        currentEngine = newEngine;
+        
+        // Save preference to cache
+        await setEnginePreference(newEngine);
+        
+        // Reset the previously initialized engine so it reinitializes with the new one
+        if (newEngine === "scramjet" && uvSW) {
+            uvSW = null;
+            console.log("💾 Cleared UV SW, ready to use Scramjet");
+        } else if (newEngine === "uv" && scramjet) {
+            scramjet = null;
+            console.log("💾 Cleared Scramjet, ready to use UV");
+        }
+        
+        console.log(`✅ Service Worker switched to ${newEngine}`);
+    }
 });
 
 async function handleRequest(event) {
-    await scramjet.loadConfig();
-
-    if (scramjet.route(event)) {
-        return scramjet.fetch(event);
+    // Wait for initialization to complete
+    await engineInitPromise;
+    
+    // Always check cache for latest engine preference in case it was updated
+    const cachedEngine = await getEnginePreference();
+    if (cachedEngine && cachedEngine !== currentEngine) {
+        currentEngine = cachedEngine;
+        console.log(`[SW] Updated engine from cache to: ${currentEngine}`);
     }
-
+    
+    const engine = currentEngine;
+    const url = event.request.url;
+    
+    try {
+        if (engine === "scramjet") {
+            const sj = initScramjet();
+            await sj.loadConfig();
+            
+            if (sj.route(event)) {
+                console.log(`[SW:Scramjet] Routing ${url}`);
+                return sj.fetch(event);
+            }
+        } else if (engine === "uv") {
+            const uv = initUV();
+            
+            // Check if this request should be routed through UV
+            try {
+                const shouldRoute = uv.route({ request: event.request });
+                if (shouldRoute) {
+                    console.log(`[SW:UV] Routing ${url}`);
+                    return uv.fetch({ request: event.request });
+                } else {
+                    console.log(`[SW:UV] Not routing (prefix check failed) ${url}`);
+                }
+            } catch (e) {
+                console.error(`[SW:UV] Route check error:`, e);
+            }
+        }
+    } catch (e) {
+        console.error(`[SW] Error handling ${engine} request:`, e);
+    }
+    
+    // Fallback to regular fetch
+    console.log(`[SW] Fallback fetch for ${url}`);
     return fetch(event.request);
 }
 
