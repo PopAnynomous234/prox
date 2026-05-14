@@ -626,11 +626,13 @@ function createLoadingBarElement() {
 // --- UI ---
 function updateBookmarkIcon() {
     const t = tabs.find(x => x.id === activeTabId);
-    if (!t?.currentUrl) return;
+    if (!t?.currentUrl || !bookmarkBtn) return;
 
+    const icon = bookmarkBtn.querySelector("i");
+    if (!icon) return;
+    
     const exists = bookmarks.some(b => b.url === t.currentUrl);
-    bookmarkBtn.querySelector("i").className =
-        exists ? "fa-solid fa-star" : "fa-regular fa-star";
+    icon.className = exists ? "fa-solid fa-star" : "fa-regular fa-star";
 }
 
 // --- EVENTS ---
