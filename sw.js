@@ -103,8 +103,11 @@ self.addEventListener("message", async (event) => {
 });
 
 async function handleRequest(event) {
+    console.log(`[SW:HANDLE] Started handling request`);
+    
     // Wait for initialization to complete
     await engineInitPromise;
+    console.log(`[SW:HANDLE] Init promise resolved`);
     
     // Always check cache for latest engine preference in case it was updated
     const cachedEngine = await getEnginePreference();
@@ -169,5 +172,7 @@ async function handleRequest(event) {
 }
 
 self.addEventListener("fetch", (event) => {
+    const url = event.request.url;
+    console.log(`[SW:FETCH] Intercepted: ${url}`);
     event.respondWith(handleRequest(event));
 });

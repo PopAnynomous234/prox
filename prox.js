@@ -298,10 +298,30 @@ async function navigateToUrl(inputUrl) {
     const url = search(inputUrl) || normalizeUrl(inputUrl);
     console.log(`📍 After normalization: ${url}, engine: ${proxyEngine}`);
 
-    // Ensure service worker is ready before navigating
+    // Ensure service worker is ready and controlling the page before navigating
     if (navigator.serviceWorker) {
         try {
             await navigator.serviceWorker.ready;
+            if (!navigator.serviceWorker.controller) {
+                console.warn("⚠️ Service worker ready but NOT controlling page, waiting...");
+                // Wait for controller to be set
+                await new Promise((resolve) => {
+                    const checkController = setInterval(() => {
+                        if (navigator.serviceWorker.controller) {
+                            clearInterval(checkController);
+                            console.log("✅ Service worker now controlling page");
+                            resolve();
+                        }
+                    }, 100);
+                    setTimeout(() => {
+                        clearInterval(checkController);
+                        console.warn("⚠️ Timeout waiting for SW controller");
+                        resolve();
+                    }, 5000);
+                });
+            } else {
+                console.log("✅ Service worker is controlling page");
+            }
         } catch (e) {
             console.error("Service worker not ready:", e);
         }
