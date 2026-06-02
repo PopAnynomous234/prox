@@ -161,7 +161,7 @@ document.addEventListener('fullscreenchange', () => {
             }
         }
 
-        const wispUrl = "wss://wisp.rhw.one/";
+        const wispUrl = "wss://as-slfa.onrender.com/wisp/";
         await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: wispUrl }]);
 
         console.log(`🚀 Proxy Engine Ready (${proxyEngine.toUpperCase()})`);
