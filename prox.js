@@ -161,7 +161,7 @@ document.addEventListener('fullscreenchange', () => {
             }
         }
 
-        const wispUrl = "128.0.0.1";
+        const wispUrl = "wss://galxy.it.com/wisp/";
         await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: wispUrl }]);
 
         console.log(`🚀 Proxy Engine Ready (${proxyEngine.toUpperCase()})`);
