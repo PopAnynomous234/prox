@@ -161,7 +161,7 @@ document.addEventListener('fullscreenchange', () => {
             }
         }
 
-        const wispUrl = "wss://as-slfa.onrender.com/wisp/";
+        const wispUrl = "128.0.0.1";
         await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: wispUrl }]);
 
         console.log(`🚀 Proxy Engine Ready (${proxyEngine.toUpperCase()})`);
@@ -766,7 +766,7 @@ function search(input) {
 function createBareMuxPort() {
 	const bareMuxConnection = new BareMux.BareMuxConnection("/prox/baremux/worker.js");
 	void bareMuxConnection.setTransport("/prox/libcurl/index.mjs", [
-		{ websocket: "wss://wisp.rhw.one/" },
+		{ websocket: "wss://galxy.it.com/wisp/" },
 	]).catch((err) => {
 		console.error("Failed to initialize BareMux transport for UV.", err);
 	});
