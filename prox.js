@@ -766,7 +766,7 @@ function search(input) {
 function createBareMuxPort() {
 	const bareMuxConnection = new BareMux.BareMuxConnection("/prox/baremux/worker.js");
 	void bareMuxConnection.setTransport("/prox/libcurl/index.mjs", [
-		{ websocket: "wss://galxy.it.com/wisp/" },
+		{ websocket: "wss://" },
 	]).catch((err) => {
 		console.error("Failed to initialize BareMux transport for UV.", err);
 	});
