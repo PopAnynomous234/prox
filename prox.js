@@ -161,7 +161,7 @@ document.addEventListener('fullscreenchange', () => {
             }
         }
 
-        const wispUrl = "wss://galxy.it.com/wisp/";
+        const wispUrl = "wss://kristenblackburnvolleyballcamps.com/socket/";
         await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: wispUrl }]);
 
         console.log(`🚀 Proxy Engine Ready (${proxyEngine.toUpperCase()})`);
