@@ -161,8 +161,9 @@ document.addEventListener('fullscreenchange', () => {
             }
         }
 
-        const wispUrl = "wss://kristenblackburnvolleyballcamps.com/socket/";
-        await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: wispUrl }]);
+        const wispUrl = "wss://iteom.inspiration-partners.pl/wisp/";
+        // this is the wisp server url for now, if it gets blocked, find me a
+        await connection.setTransport("/prox/epoxy/index.mjs", [{ wisp: wispUrl }]);
 
         console.log(`🚀 Proxy Engine Ready (${proxyEngine.toUpperCase()})`);
     } catch (e) {
