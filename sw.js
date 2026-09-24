@@ -108,14 +108,14 @@ async function handleRequest(event) {
     // Wait for initialization to complete
     await engineInitPromise;
     console.log(`[SW:HANDLE] Init promise resolved`);
-    
-    // Always check cache for latest engine preference in case it was updated
-    const cachedEngine = await getEnginePreference();
-    if (cachedEngine && cachedEngine !== currentEngine) {
-        currentEngine = cachedEngine;
-        console.log(`[SW] Updated engine from cache to: ${currentEngine}`);
-    }
-    
+
+    // NOTE: we used to re-read the engine preference from the Cache API on
+    // *every single request* here. currentEngine is already kept live by the
+    // "setEngine" postMessage listener above (and seeded once at startup via
+    // engineInitPromise), so that extra cache open+match+JSON-parse per
+    // request was pure overhead — multiplied across the dozens of concurrent
+    // subresource requests a page like YouTube makes, it was a real source
+    // of stutter/stalling, not just a correctness no-op.
     const engine = currentEngine;
     const url = event.request.url;
     

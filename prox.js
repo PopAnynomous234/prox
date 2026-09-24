@@ -20,12 +20,16 @@ const bmNameInput = document.getElementById("bm-name");
 const bmUrlInput = document.getElementById("bm-url");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
 
+const wispUrlInput = document.getElementById("wisp-url-input");
+const wispSaveBtn = document.getElementById("wisp-save-btn");
+
 let tabs = [];
 let activeTabId = null;
 let tabCounter = 0;
 let bookmarks = JSON.parse(localStorage.getItem("nebula_bookmarks") || "[]");
 let proxyEngine = localStorage.getItem("proxy_engine") || "scramjet";
 let currentSearchEngine = localStorage.getItem("search_engine") || "duckduckgo";
+let wispUrl = localStorage.getItem("custom_wisp_url") || "wss://wisp.mercurywork.shop/";
 
 // --- SEARCH ENGINE TEMPLATES ---
 const searchEngines = {
@@ -44,6 +48,7 @@ function initializeProxyEngine() {
     if (proxyEngine === "scramjet") {
         const { ScramjetController } = $scramjetLoadController();
         scramjet = new ScramjetController({
+            prefix: "/scramjet/",
             files: {
                 wasm: "/prox/scram/scramjet.wasm.wasm",
                 all: "/prox/scram/scramjet.all.js",
@@ -51,7 +56,6 @@ function initializeProxyEngine() {
             }
         });
         scramjet.init();
-        scramjet.route = "/scramjet/";
     }
 }
 
@@ -77,8 +81,8 @@ function enterFullscreen() {
         return;
     }
     try {
-        const promise = el.requestFullscreen ? el.requestFullscreen() : 
-                       el.webkitRequestFullscreen ? el.webkitRequestFullscreen() : 
+        const promise = el.requestFullscreen ? el.requestFullscreen() :
+                       el.webkitRequestFullscreen ? el.webkitRequestFullscreen() :
                        Promise.reject('No fullscreen API');
         promise.then(() => console.log('[Fullscreen] Entered fullscreen')).catch(err => console.error('[Fullscreen] Enter failed:', err));
     } catch (e) { console.error('[Fullscreen] Exception during enter:', e); }
@@ -86,8 +90,8 @@ function enterFullscreen() {
 
 function exitFullscreen() {
     try {
-        const promise = document.exitFullscreen ? document.exitFullscreen() : 
-                       document.webkitExitFullscreen ? document.webkitExitFullscreen() : 
+        const promise = document.exitFullscreen ? document.exitFullscreen() :
+                       document.webkitExitFullscreen ? document.webkitExitFullscreen() :
                        Promise.reject('No fullscreen API');
         promise.then(() => console.log('[Fullscreen] Exited fullscreen')).catch(err => console.error('[Fullscreen] Exit failed:', err));
     } catch (e) { console.error('[Fullscreen] Exception during exit:', e); }
@@ -119,13 +123,23 @@ document.addEventListener('fullscreenchange', () => {
     }
 });
 
+// --- WISP TRANSPORT ---
+async function applyWispTransport(url) {
+    try {
+        await connection.setTransport("/prox/libcurl/index.mjs", [{ wisp: url }]);
+        console.log(`✅ Wisp transport set to ${url}`);
+    } catch (e) {
+        console.error("Failed to set wisp transport:", e);
+    }
+}
+
 // --- PREWARM ---
 (async () => {
     try {
         if ("serviceWorker" in navigator) {
             const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
             console.log("✅ Service Worker registered successfully");
-            
+
             // Save engine preference to cache for SW to read
             try {
                 const cache = await caches.open("nebula-config");
@@ -137,7 +151,7 @@ document.addEventListener('fullscreenchange', () => {
             } catch (e) {
                 console.error("Failed to save engine preference to cache:", e);
             }
-            
+
             // Wait for service worker to be active
             const controller = await new Promise((resolve) => {
                 if (navigator.serviceWorker.controller) {
@@ -148,9 +162,9 @@ document.addEventListener('fullscreenchange', () => {
                     }, { once: true });
                 }
             });
-            
+
             console.log("✅ Service Worker is now controlling the page");
-            
+
             // Immediately send engine preference to ensure SW knows about it
             if (controller) {
                 controller.postMessage({
@@ -161,9 +175,7 @@ document.addEventListener('fullscreenchange', () => {
             }
         }
 
-        const wispUrl = "wss://iteom.inspiration-partners.pl/wisp/";
-        // this is the wisp server url for now, if it gets blocked, find me a
-        await connection.setTransport("/prox/epoxy/index.mjs", [{ wisp: wispUrl }]);
+        await applyWispTransport(wispUrl);
 
         console.log(`🚀 Proxy Engine Ready (${proxyEngine.toUpperCase()})`);
     } catch (e) {
@@ -180,7 +192,7 @@ if (engineSelector) {
         proxyEngine = newEngine;
         console.log(`🔄 Switching to ${newEngine}...`);
 
-        
+
         // Update cache with new engine preference BEFORE unregistering
         try {
             const cache = await caches.open("nebula-config");
@@ -192,7 +204,7 @@ if (engineSelector) {
         } catch (err) {
             console.error("Failed to update cache:", err);
         }
-        
+
         // Unregister old service worker
         if (navigator.serviceWorker) {
             try {
@@ -205,16 +217,16 @@ if (engineSelector) {
                 console.error("Failed to unregister:", err);
             }
         }
-        
+
         // Wait a moment for unregistration to complete
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // Re-register service worker and wait for it to be active
         if (navigator.serviceWorker) {
             try {
                 const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
                 console.log("✅ Service Worker registered");
-                
+
                 // Wait for the new SW to become active
                 await new Promise((resolve) => {
                     if (registration.active) {
@@ -235,9 +247,9 @@ if (engineSelector) {
                         }, 3000);
                     }
                 });
-                
+
                 console.log("✅ New service worker is active");
-                
+
                 // Notify the active controller of engine change
                 if (navigator.serviceWorker.controller) {
                     navigator.serviceWorker.controller.postMessage({
@@ -250,22 +262,22 @@ if (engineSelector) {
                 console.error("❌ Failed to register service worker:", err);
             }
         }
-        
+
         // Close all tabs and reinitialize
         const tabIds = [...tabs].map(t => t.id);
         console.log(`Closing ${tabIds.length} tabs...`);
         tabIds.forEach(id => closeTab(id));
         initializeProxyEngine();
-        
+
         // Wait a moment to ensure SW is fully ready before creating new tab
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Ensure at least one tab exists
         if (tabs.length === 0) {
             console.log("Creating new tab after engine switch...");
             createTab();
         }
-        
+
         console.log(`✅ Switched to ${newEngine}`);
     });
 }
@@ -281,10 +293,60 @@ if (searchEngineSelector) {
     });
 }
 
+// --- CUSTOM WISP SERVER SWITCHER ---
+if (wispUrlInput) wispUrlInput.value = wispUrl;
+
+if (wispSaveBtn) {
+    wispSaveBtn.addEventListener("click", async () => {
+        const newUrl = (wispUrlInput?.value || "").trim();
+
+        if (!/^wss?:\/\/.+/.test(newUrl)) {
+            alert("Enter a valid Wisp server URL starting with ws:// or wss://");
+            return;
+        }
+
+        localStorage.setItem("custom_wisp_url", newUrl);
+        wispUrl = newUrl;
+        console.log(`🔄 Switching Wisp server to ${wispUrl}...`);
+
+        await applyWispTransport(wispUrl);
+
+        // Restart service worker so it picks up the new transport cleanly
+        if (navigator.serviceWorker) {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+            } catch (err) {
+                console.error("Failed to unregister service workers:", err);
+            }
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (navigator.serviceWorker) {
+            try {
+                await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+            } catch (err) {
+                console.error("Failed to re-register service worker:", err);
+            }
+        }
+
+        // Close and recreate tabs so open frames reconnect through the new server
+        const tabIds = [...tabs].map(t => t.id);
+        tabIds.forEach(id => closeTab(id));
+        if (tabs.length === 0) createTab();
+
+        console.log(`✅ Wisp server switched to ${wispUrl}`);
+        alert(`Wisp server updated to ${wispUrl}`);
+    });
+}
+
 // --- NAVIGATION ---
 async function navigateToUrl(inputUrl) {
     console.log(`📍 navigateToUrl called with: ${inputUrl}`);
-    
+
     const currentTab = tabs.find(t => t.id === activeTabId);
     if (!currentTab) {
         console.error("❌ No active tab found");
@@ -377,7 +439,7 @@ async function navigateToUrl(inputUrl) {
         try {
             frameEl.addEventListener('load', () => {
                 try { currentTab.iframe.loading.finish(); } catch (e) { /* ignore */ }
-                
+
                 // Extract and display page title from iframe
                 try {
                     const pageTitle = frameEl.contentWindow.document.title || "Untitled";
@@ -431,18 +493,18 @@ async function navigateToUrl(inputUrl) {
     addressInput.value = inputUrl;
     currentTab.el.querySelector(".tab-title").textContent = "Loading...";
     // Actual page title will be set when page loads
-    
+
     // Update favicon
     if (currentTab.faviconEl) {
         currentTab.faviconEl.src = getFaviconUrl(url);
     }
-    
+
     try {
         updateBookmarkIcon();
     } catch (e) {
         console.error("❌ updateBookmarkIcon error:", e);
     }
-    
+
     console.log(`✅ Navigation complete to ${url}`);
 }
 
@@ -460,7 +522,14 @@ function renderBookmarks() {
             ? "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2326ff9a'><path d='M13 1.07V9h7c0-4.08-3.05-7.44-7-7.93M4 15c0 4.42 3.58 8 8 8s8-3.58 8-8v-4H4v4zm7-13.93C7.05 1.56 4 4.92 4 9h7V1.07z'/></svg>"
             : `https://www.google.com/s2/favicons?domain=${bm.url}&sz=32`;
 
-        div.innerHTML = `<img src="${iconUrl}" class="bookmark-icon"><span>${bm.title}</span>`;
+        // Built with DOM APIs (not innerHTML) so bookmark titles can't inject markup
+        const img = document.createElement("img");
+        img.src = iconUrl;
+        img.className = "bookmark-icon";
+        const span = document.createElement("span");
+        span.textContent = bm.title;
+        div.appendChild(img);
+        div.appendChild(span);
 
         div.onclick = () => {
             if (isJS) return;
@@ -595,13 +664,6 @@ function setupFrameInjection(frame) {
 
             doc.head.appendChild(script);
 
-            doc.addEventListener("click", (e) => {
-                const a = e.target.closest("a");
-                if (!a) return;
-                e.preventDefault();
-                win.location.href = a.href;
-            });
-
         } catch (e) {
             console.warn("Injection blocked:", e);
         }
@@ -659,7 +721,7 @@ function updateBookmarkIcon() {
 
     const icon = bookmarkBtn.querySelector("i");
     if (!icon) return;
-    
+
     const exists = bookmarks.some(b => b.url === t.currentUrl);
     icon.className = exists ? "fa-solid fa-star" : "fa-regular fa-star";
 }
@@ -721,6 +783,7 @@ document.getElementById("nav-forward").onclick = () => {
 console.log("🚀 Nebula Browser loaded");
 console.log("Current proxy engine:", proxyEngine);
 console.log("Current search engine:", currentSearchEngine);
+console.log("Current wisp server:", wispUrl);
 console.log("UV available:", typeof __uv$config !== 'undefined');
 console.log("Scramjet available:", typeof $scramjetLoadController !== 'undefined');
 
@@ -746,7 +809,7 @@ function search(input) {
 			return new URL(input).toString();
 		}
 	} catch (err) {}
-	
+
 	// Try to detect if it's a domain (has . and no spaces)
 	try {
 		if (input.includes(".") && !input.includes(" ")) {
@@ -757,23 +820,25 @@ function search(input) {
 			}
 		}
 	} catch (err) {}
-	
+
 	// Otherwise, treat as search query
 	const template = searchEngines[currentSearchEngine] || searchEngines.duckduckgo;
 	return template.replace("%s", encodeURIComponent(input));
 }
 
-// Create BareMux port for UV engine support
+// Create BareMux port for UV engine support.
+// Reuses the shared `connection` (with its already-configured wisp transport)
+// instead of spinning up a second BareMuxConnection pointed at a different,
+// hardcoded wisp server — that mismatch was why UV mode ignored engine/wisp settings.
 function createBareMuxPort() {
-	const bareMuxConnection = new BareMux.BareMuxConnection("/prox/baremux/worker.js");
-	void bareMuxConnection.setTransport("/prox/libcurl/index.mjs", [
-		{ websocket: "wss://galxy.it.com/wisp/" },
-	]).catch((err) => {
-		console.error("Failed to initialize BareMux transport for UV.", err);
-	});
-	const port = bareMuxConnection.getInnerPort();
-	port.start?.();
-	return port;
+    try {
+        const port = connection.getInnerPort();
+        port.start?.();
+        return port;
+    } catch (err) {
+        console.error("Failed to create BareMux port:", err);
+        return null;
+    }
 }
 
 // Listen for port requests from UV
@@ -789,7 +854,7 @@ window.addEventListener("message", async (event) => {
             return port;
         } catch (err) {
             console.warn("BareMux port creation failed, attempting to recreate...", err);
-            return createBareMuxPort(); 
+            return createBareMuxPort();
         }
     };
 
