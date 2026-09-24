@@ -105,17 +105,8 @@ self.addEventListener("message", async (event) => {
 async function handleRequest(event) {
     console.log(`[SW:HANDLE] Started handling request`);
     
-    // Wait for initialization to complete
     await engineInitPromise;
-    console.log(`[SW:HANDLE] Init promise resolved`);
 
-    // NOTE: we used to re-read the engine preference from the Cache API on
-    // *every single request* here. currentEngine is already kept live by the
-    // "setEngine" postMessage listener above (and seeded once at startup via
-    // engineInitPromise), so that extra cache open+match+JSON-parse per
-    // request was pure overhead — multiplied across the dozens of concurrent
-    // subresource requests a page like YouTube makes, it was a real source
-    // of stutter/stalling, not just a correctness no-op.
     const engine = currentEngine;
     const url = event.request.url;
     
@@ -128,35 +119,30 @@ async function handleRequest(event) {
             
             if (sj.route(event)) {
                 console.log(`[SW:Scramjet] Routing ${url}`);
-                return sj.fetch(event);
+                const response = await sj.fetch(event);
+                return stripSecurityHeaders(response); // <-- STRIP HEADERS HERE
             }
         } else if (engine === "uv") {
             const uv = initUV();
-            
-            // Check if request URL includes the UV prefix
             const hasUVPrefix = url.includes(__uv$config.prefix);
-            console.log(`[SW:UV] URL has prefix: ${hasUVPrefix}, checking route...`);
             
-            // If request is to the UV prefix, MUST route through UV (don't fall back)
             if (hasUVPrefix) {
                 console.log(`[SW:UV] FORCING route for ${url}`);
                 try {
                     const response = await uv.fetch({ request: event.request });
-                    console.log(`[SW:UV] Fetch success`);
-                    return response;
+                    return stripSecurityHeaders(response); // <-- STRIP HEADERS HERE
                 } catch (e) {
                     console.error(`[SW:UV] Fetch error:`, e);
                     return new Response("UV proxy error: " + e.message, { status: 502 });
                 }
             }
             
-            // For non-prefixed requests, check if UV should handle it
             try {
                 const shouldRoute = uv.route({ request: event.request });
-                console.log(`[SW:UV] Should route (non-prefixed): ${shouldRoute}`);
                 if (shouldRoute) {
                     console.log(`[SW:UV] Routing non-prefixed ${url}`);
-                    return uv.fetch({ request: event.request });
+                    const response = await uv.fetch({ request: event.request });
+                    return stripSecurityHeaders(response); // <-- STRIP HEADERS HERE
                 }
             } catch (e) {
                 console.error(`[SW:UV] Route check error:`, e);
@@ -166,9 +152,30 @@ async function handleRequest(event) {
         console.error(`[SW] Error handling ${engine} request:`, e);
     }
     
-    // Fallback to regular fetch (only for non-proxied requests)
-    console.log(`[SW] Fallback fetch for ${url}`);
     return fetch(event.request);
+}
+
+// Helper to strip restrictive security headers from proxied responses
+function stripSecurityHeaders(response) {
+    if (!response || !response.headers) return response;
+
+    const newHeaders = new Headers(response.headers);
+    
+    // Remove headers that cause "refused to connect" or iframe blocks
+    newHeaders.delete("Cross-Origin-Embedder-Policy");
+    newHeaders.delete("Cross-Origin-Opener-Policy");
+    newHeaders.delete("X-Frame-Options");
+    newHeaders.delete("Content-Security-Policy");
+
+    // Allow cross-origin framing and sub-resource loading
+    newHeaders.set("Cross-Origin-Resource-Policy", "cross-origin");
+    newHeaders.set("Access-Control-Allow-Origin", "*");
+
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders
+    });
 }
 
 self.addEventListener("fetch", (event) => {

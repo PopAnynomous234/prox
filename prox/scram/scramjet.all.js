@@ -34,160 +34,223 @@ ${l}`}}if((0,n.U5)("rewriterLogs",r.base))for(let e of s.errors)console.error("o
                     setTimeout(() => btn.textContent = 'Copy', 2000);
                 });
         `;return`<!DOCTYPE html>
-            <html>
-                <head>
-                    <meta charset="utf-8" />
-                    <title>Scramjet</title>
-                    <style>
-                    :root {
-                        --deep: #080602;
-                        --shallow: #181412;
-                        --beach: #f1e8e1;
-                        --shore: #b1a8a1;
-                        --accent: #ffa938;
-                        --font-sans: -apple-system, system-ui, BlinkMacSystemFont, sans-serif;
-                        --font-monospace: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-                    }
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Scramjet</title>
+        <style>
+        :root {
+            --deep: #000000;
+            --shallow: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --beach: #ffffff;
+            --shore: rgba(255, 255, 255, 0.55);
+            --accent: #ffffff;
+            --font-sans: -apple-system, system-ui, BlinkMacSystemFont, sans-serif;
+            --font-monospace: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
 
-                    *:not(div,p,span,ul,li,i,span) {
-                        background-color: var(--deep);
-                        color: var(--beach);
-                        font-family: var(--font-sans);
-                    }
+        * {
+            box-sizing: border-box;
+        }
 
-                    textarea,
-                    button {
-                        background-color: var(--shallow);
-                        border-radius: 0.6em;
-                        padding: 0.6em;
-                        border: none;
-                        appearance: none;
-                        font-family: var(--font-sans);
-                        color: var(--beach);
-                    }
+        *:not(div,p,span,ul,li,i,span) {
+            background-color: transparent;
+            color: var(--beach);
+            font-family: var(--font-sans);
+        }
 
-                    button.primary {
-                        background-color: var(--accent);
-                        color: var(--deep);
-                        font-weight: bold;
-                    }
+        body {
+            width: 100vw;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08), transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.05), transparent 45%),
+                linear-gradient(160deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        }
 
-                    textarea {
-                        resize: none;
-                        height: 20em;
-                        text-align: left;
-                        font-family: var(--font-monospace);
-                    }
+        body,
+        html,
+        #inner {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            gap: 0.5em;
+            overflow: hidden;
+        }
 
-                    body {
-                        width: 100vw;
-                        height: 100vh;
-                        justify-content: center;
-                        align-items: center;
-                    }
+        #inner {
+            z-index: 100;
+            padding: 2.5em 3em;
+            border-radius: 1.2em;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+        }
 
-                    body,
-                    html,
-                    #inner {
-                        display: flex;
-                        align-items: center;
-                        flex-direction: column;
-                        gap: 0.5em;
-                        overflow: hidden;
-                    }
+        #errorTitle {
+            background: linear-gradient(90deg, #ffffff, #a8a8a8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.2em;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
 
-                    #inner {
-                        z-index: 100;
-                    }
+        textarea,
+        button {
+            background-color: var(--shallow);
+            border-radius: 0.6em;
+            padding: 0.6em;
+            border: 1px solid var(--glass-border);
+            appearance: none;
+            font-family: var(--font-sans);
+            color: var(--beach);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
 
-                    #cover {
-                        position: absolute;
-                        width: 100%;
-                        height: 100%;
-                        background-color: color-mix(in srgb, var(--deep) 70%, transparent);
-                        z-index: 99;
-                    }
+        button {
+            cursor: pointer;
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
 
-                    #info {
-                        display: flex;
-                        flex-direction: row;
-                        align-items: flex-start;
-                        gap: 1em;
-                    }
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
 
-                    #version-wrapper {
-                        width: auto;
-                        text-align: right;
-                        position: absolute;
-                        top: 0.5rem;
-                        right: 0.5rem;
-                        font-size: 0.8rem;
-                        color: var(--shore)!important;
-                        i {
-                            background-color: color-mix(in srgb, var(--deep), transparent 50%);
-                            border-radius: 9999px;
-                            padding: 0.2em 0.5em;
-                        }
-                        z-index: 101;
-                    }
+        button.primary {
+            background: linear-gradient(135deg, #ffffff, #cfcfcf);
+            color: #000000;
+            font-weight: bold;
+            border: none;
+            box-shadow: 0 4px 18px rgba(255, 255, 255, 0.15);
+        }
 
-                    #errorTrace-wrapper {
-                        position: relative;
-                        width: fit-content;
-                    }
+        button.primary:hover {
+            background: linear-gradient(135deg, #ffffff, #ffffff);
+            box-shadow: 0 6px 22px rgba(255, 255, 255, 0.25);
+        }
 
-                    #copy-button {
-                        position: absolute;
-                        top: 0.5em;
-                        right: 0.5em;
-                        padding: 0.23em;
-                        cursor: pointer;
-                        opacity: 0;
-                        transition: opacity 0.4s;
-                        font-size: 0.9em;
-                    }
+        textarea {
+            resize: none;
+            height: 20em;
+            text-align: left;
+            font-family: var(--font-monospace);
+        }
 
-                    #errorTrace-wrapper:hover #copy-button {
-                        opacity: 1;
-                    }
-                    </style>
-                </head>
-                <body>
-                    <div id="cover"></div>
-                    <div id="inner">
-                        <h1 id="errorTitle">Uh oh!</h1>
-                        <p>There was an error loading <b id="fetchedURL"></b></p>
-                        <!-- <p id="errorMessage">Internal Server Error</p> -->
+        #info {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 1em;
+        }
 
-                        <div id="info">
-                            <div id="errorTrace-wrapper">
-                                <textarea id="errorTrace" cols="40" rows="10" readonly></textarea>
-                                <button id="copy-button" class="primary">Copy</button>
-                            </div>
-                            <div id="troubleshooting">
-                                <p>Try:</p>
-                                <ul>
-                                    <li>Checking your internet connection</li>
-                                    <li>Verifying you entered the correct address</li>
-                                    <li>Clearing the site data</li>
-                                    <li>Contacting <b id="hostname"></b>'s administrator</li>
-                                    <li>Verify the server isn't censored</li>
-                                </ul>
-                                <p>If you're the administrator of <b id="hostname"></b>, try:</p>
-                                    <ul>
-                                    <li>Restarting your server</li>
-                                    <li>Updating Scramjet</li>
-                                    <li>Troubleshooting the error on the <a href="https://github.com/MercuryWorkshop/scramjet" target="_blank">GitHub repository</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <br>
-                        <button id="reload" class="primary">Reload</button>
-                    </div>
-                    <p id="version-wrapper"><i>Scramjet v<span id="version"></span> (build <span id="build"></span>)</i></p>
-                    <script src="${"data:application/javascript,"+encodeURIComponent(r)}"></script>
-                </body>
-            </html>
+        #version-wrapper {
+            width: auto;
+            text-align: right;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--shore) !important;
+            z-index: 101;
+        }
+
+        #version-wrapper i {
+            background-color: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--glass-border);
+            border-radius: 9999px;
+            padding: 0.3em 0.8em;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        #errorTrace-wrapper {
+            position: relative;
+            width: fit-content;
+        }
+
+        #copy-button {
+            position: absolute;
+            top: 0.5em;
+            right: 0.5em;
+            padding: 0.23em;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.4s;
+            font-size: 0.9em;
+        }
+
+        #errorTrace-wrapper:hover #copy-button {
+            opacity: 1;
+        }
+
+        #troubleshooting p {
+            color: var(--beach);
+            margin: 0.3em 0;
+            font-weight: 600;
+        }
+
+        #troubleshooting ul {
+            margin: 0.3em 0 0.8em 0;
+            padding-left: 1.2em;
+            color: var(--shore);
+        }
+
+        #troubleshooting a {
+            color: var(--beach);
+            text-decoration: underline;
+            text-decoration-color: var(--shore);
+        }
+
+        #fetchedURL, #hostname {
+            color: var(--beach);
+            font-weight: 600;
+        }
+        </style>
+    </head>
+    <body>
+        <div id="inner">
+            <h1 id="errorTitle">Uh oh!</h1>
+            <p>There was an error loading <b id="fetchedURL"></b></p>
+
+            <div id="info">
+                <div id="errorTrace-wrapper">
+                    <textarea id="errorTrace" cols="40" rows="10" readonly></textarea>
+                    <button id="copy-button" class="primary">Copy</button>
+                </div>
+                <div id="troubleshooting">
+                    <p>Try:</p>
+                    <ul>
+                        <li>Checking your internet connection</li>
+                        <li>Verifying you entered the correct address</li>
+                        <li>Clearing the site data</li>
+                        <li>Contacting <b id="hostname"></b>'s administrator</li>
+                        <li>Verify the server isn't censored</li>
+                    </ul>
+                    <p>If you're the administrator of <b id="hostname"></b>, try:</p>
+                    <ul>
+                        <li>Restarting your server</li>
+                        <li>Updating Scramjet</li>
+                        <li>Troubleshooting the error on the <a href="https://github.com/MercuryWorkshop/scramjet" target="_blank">GitHub repository</a></li>
+                    </ul>
+                </div>
+            </div>
+            <br>
+            <button id="reload" class="primary">Reload</button>
+        </div>
+        <p id="version-wrapper"><i>Scramjet v<span id="version"></span> (build <span id="build"></span>)</i></p>
+        <script src="${"data:application/javascript,"+encodeURIComponent(r)}"></script>
+    </body>
+</html>
         `}function i(e,t){let r={"content-type":"text/html"};return crossOriginIsolated&&(r["Cross-Origin-Embedder-Policy"]="require-corp"),new Response(n(String(e),t),{status:500,headers:r})}r.d(t,{B:()=>n,v:()=>i})},1403:function(e,t,r){r.d(t,{H:()=>n});class n{handle;origin;syncToken=0;promises={};messageChannel=new MessageChannel;connected=!1;constructor(e,t){this.handle=e,this.origin=t,this.messageChannel.port1.addEventListener("message",e=>{"scramjet$type"in e.data&&("init"===e.data.scramjet$type?this.connected=!0:this.handleMessage(e.data))}),this.messageChannel.port1.start(),this.handle.postMessage({scramjet$type:"init",scramjet$port:this.messageChannel.port2},[this.messageChannel.port2])}handleMessage(e){let t=this.promises[e.scramjet$token];t&&(t(e),delete this.promises[e.scramjet$token])}async fetch(e){let t=this.syncToken++,r={scramjet$type:"fetch",scramjet$token:t,scramjet$request:{url:e.url,body:e.body,headers:Array.from(e.headers.entries()),method:e.method,mode:e.mode,destinitation:e.destination}},n=e.body?[e.body]:[];this.handle.postMessage(r,n);let{scramjet$response:i}=await new Promise(e=>{this.promises[t]=e});return!!i&&new Response(i.body,{headers:i.headers,status:i.status,statusText:i.statusText})}}},5790:function(e,t,r){r.d(t,{Pf:()=>m,V3:()=>S,dT:()=>w});var n=r(5956),i=r(8228),a=r(6684),s=r(1472),o=r(1478),l=r(1427),c=r(37),u=r(4435),d=r(884),h=r(2614),p=r(2015),f=r(8665).A;function g(e){return e.status>=300&&e.status<400}async function m(e,t){try{let r,n,o=new URL(e.url);if(o.pathname===this.config.files.wasm)return fetch(this.config.files.wasm).then(async e=>{let t=await e.arrayBuffer(),r=btoa(new Uint8Array(t).reduce((e,t)=>(e.push(String.fromCharCode(t)),e),[]).join("")),n="";return n+=`if ('document' in self && document.currentScript) { document.currentScript.remove(); }
 self.WASM = '${r}';`,new Response(n,{headers:{"content-type":"text/javascript"}})});let u="",d={};for(let[e,t]of[...o.searchParams.entries()]){switch(e){case"type":u=t;break;case"dest":break;case"topFrame":r=t;break;case"parentFrame":n=t;break;default:f.warn(`${o.href} extraneous query parameter ${e}. Assuming <form> element`),d[e]=t}o.searchParams.delete(e)}let h=new URL((0,s.v2)(o));for(let[e,t]of Object.entries(d))h.searchParams.set(e,t);let p={origin:h,base:h,topFrameName:r,parentFrameName:n};if(o.pathname.startsWith(`${this.config.prefix}blob:`)||o.pathname.startsWith(`${this.config.prefix}data:`)){let t,r=o.pathname.substring(this.config.prefix.length);r.startsWith("blob:")&&(r=(0,s.$n)(r));let n=await fetch(r,{});n.finalURL=r.startsWith("blob:")?r:"(data url)",n.body&&(t=await b(n,p,e.destination,u,this.cookieStore));let i=Object.fromEntries(n.headers.entries());return crossOriginIsolated&&(i["Cross-Origin-Opener-Policy"]="same-origin",i["Cross-Origin-Embedder-Policy"]="require-corp"),new Response(t,{status:n.status,statusText:n.statusText,headers:i})}let g=this.serviceWorkers.find(e=>e.origin===h.origin);if(g?.connected&&"swruntime"!==o.searchParams.get("from")){let t=await g.fetch(e);if(t)return t}if(h.origin===new URL(e.url).origin)throw Error("attempted to fetch from same origin - this means the site has obtained a reference to the real origin, aborting");let m=new l.u;for(let[t,r]of e.headers.entries())m.set(t,r);if(t&&new URL(t.url).pathname.startsWith(c.$W.prefix)){let e=new URL((0,s.v2)(t.url));e.toString().includes("youtube.com")||(m.set("Referer",e.href),m.set("Origin",e.origin))}let w=this.cookieStore.getCookies(h,!1);w.length&&m.set("Cookie",w);let v=!1;if("iframe"===e.destination&&"navigate"===e.mode&&e.referrer&&"no-referrer"!==e.referrer&&e.referrer!==location.origin+c.$W.prefix+"no-referrer"){let t=e.referrer,r=await self.clients.matchAll({type:"window"});for(;t;){if(!t.includes(c.$W.prefix)){v=!0;break}let e=r.find(e=>e.url===t),n=await (0,a.Yq)(t);if(!n||!n.referrer){e&&t.startsWith(location.origin)&&(v=!0);break}if(e&&"nested"===e.frameType)t=n.referrer;else break}}v?(m.set("Sec-Fetch-Dest","document"),m.set("Sec-Fetch-Mode","navigate")):(m.set("Sec-Fetch-Dest",e.destination||"empty"),m.set("Sec-Fetch-Mode",e.mode));let x="none";if(e.referrer&&""!==e.referrer&&"no-referrer"!==e.referrer&&e.referrer!==location.origin+c.$W.prefix+"no-referrer"&&e.referrer.includes(c.$W.prefix)){let t=(0,s.v2)(e.referrer);if(t){let e=new URL(t);x=await (0,i.ps)(p,e,this.client)}}await (0,a.rj)(h.toString(),e.referrer?(0,s.v2)(e.referrer):null,x),m.set("Sec-Fetch-Site",await (0,a.hU)(h.toString(),x));let E=new S(h,m.headers,e.body,e.method,e.destination,t);this.dispatchEvent(E);let T=await E.response||await this.client.fetch(E.url,{method:E.method,body:E.body,headers:E.requestHeaders,credentials:"omit",mode:"cors"===e.mode?e.mode:"same-origin",cache:e.cache,redirect:"manual",duplex:"half"});return T.finalURL=E.url.href,await y(h,p,u,e.destination,e.mode,T,this.cookieStore,t,this.client,this,e.referrer)}catch(i){let t={message:i.message,url:e.url,destination:e.destination};if(i.stack&&(t.stack=i.stack),console.error("ERROR FROM SERVICE WORKER FETCH: ",t),console.error(i),!["document","iframe"].includes(e.destination))return new Response(void 0,{status:500});let r=Object.entries(t).map(([e,t])=>`${e.charAt(0).toUpperCase()+e.slice(1)}: ${t}`).join("\n\n");return(0,n.v)(r,(0,s.v2)(e.url))}}async function y(e,t,r,n,o,l,d,h,p,f,m){let y,S="navigate"===o&&["document","iframe"].includes(n),v=await (0,u.l)(l.rawHeaders,t,p,{get:a.Yq,set:a.pL});if(S&&v["referrer-policy"]&&m&&await (0,a.pL)(e.href,v["referrer-policy"],m),g(l)){let t=new URL((0,s.v2)(v.location));await (0,a.YH)(e.toString(),t.toString(),v["referrer-policy"]);let n=await (0,i.ps)({origin:t,base:t},e,p);if(await (0,a.hU)(t.toString(),n),r){let e=new URL(v.location);e.searchParams.set("type",r),v.location=e.href}}let x=v["set-cookie"]||[];for(let t in x)if(h){let r=f.dispatch(h,{scramjet$type:"cookie",cookie:t,url:e.href});"document"!==n&&"iframe"!==n&&await r}for(let t in await d.setCookies(x instanceof Array?x:[x],e),v)Array.isArray(v[t])&&(v[t]=v[t][0]);if(function(e,t){if(["document","iframe"].includes(t)){let t=e["content-disposition"];if(t){if("inline"!==t)return!0}else{let t=e["content-type"]?.split(";")[0].trim().toLowerCase();if(t&&!["text/html","text/plain","text/css","text/javascript","text/xml","application/javascript","application/json","application/xml","application/pdf"].includes(t)&&!t.startsWith("text")&&!t.startsWith("image")&&!t.startsWith("font")&&!t.startsWith("video"))return!0}}return!1}(v,n)&&!g(l))if((0,c.U5)("interceptDownloads",e)){if(!h)throw Error("cant find client");let t=null,r=v["content-disposition"];if("string"==typeof r){let e=r.match(/filename=["']?([^"';\n]*)["']?/i);e&&e[1]&&(t=e[1])}let n=v["content-length"],i=await clients.matchAll({});if((i=i.filter(e=>!e.url.includes(c.$W.prefix))).length<1)throw Error("couldn't find a controller client to dispatch download to");let a={filename:t,url:e.href,type:v["content-type"],body:l.body,length:Number(n)};i[0].postMessage({scramjet$type:"download",download:a},[l.body]),await new Promise(()=>{})}else{let e=v["content-disposition"];if(!/\s*?((inline|attachment);\s*?)filename=/i.test(e)){let t=/^\s*?attachment/i.test(e)?"attachment":"inline",[r]=new URL(l.finalURL).pathname.split("/").slice(-1);v["content-disposition"]=`${t}; filename=${JSON.stringify(r)}`}}l.body&&!g(l)&&(y=await b(l,t,n,r,d)),"text/event-stream"===v.accept&&(v["content-type"]="text/event-stream"),delete v["permissions-policy"],crossOriginIsolated&&["document","iframe","worker","sharedworker","style","script"].includes(n)&&(v["Cross-Origin-Embedder-Policy"]="require-corp",v["Cross-Origin-Opener-Policy"]="same-origin");let E=new w(y,v,l.status,l.statusText,n,e,l,h);return f.dispatchEvent(E),g(l)||await (0,a.Sn)(e.toString()),new Response(E.responseBody,{headers:E.responseHeaders,status:E.status,statusText:E.statusText})}async function b(e,t,r,n,i){switch(r){case"iframe":case"document":if(e.headers.get("content-type")?.startsWith("text/html"))return(0,d.Qs)(await e.text(),i,t,!0);return e.body;case"script":return(0,o.o)(new Uint8Array(await e.arrayBuffer()),e.finalURL,t,"module"===n);case"style":return(0,h.s)(await e.text(),t);case"sharedworker":case"worker":return(0,p.i)(new Uint8Array(await e.arrayBuffer()),n,e.finalURL,t);default:return e.body}}class w extends Event{responseBody;responseHeaders;status;statusText;destination;url;rawResponse;client;constructor(e,t,r,n,i,a,s,o){super("handleResponse"),this.responseBody=e,this.responseHeaders=t,this.status=r,this.statusText=n,this.destination=i,this.url=a,this.rawResponse=s,this.client=o}}class S extends Event{url;requestHeaders;body;method;destination;client;constructor(e,t,r,n,i,a){super("request"),this.url=e,this.requestHeaders=t,this.body=r,this.method=n,this.destination=i,this.client=a}response}},7510:function(e,t,r){r.r(t),r.d(t,{FakeServiceWorker:()=>n.H,ScramjetHandleResponseEvent:()=>i.dT,ScramjetRequestEvent:()=>i.V3,ScramjetServiceWorker:()=>d,errorTemplate:()=>u.B,handleFetch:()=>i.Pf,renderError:()=>u.v});var n=r(1403),i=r(5790),a=r(236),s=r(1561),o=r(3831),l=r(6570),c=r(37),u=r(5956);class d extends EventTarget{client;config;syncPool={};synctoken=0;cookieStore=new o.k;serviceWorkers=[];constructor(){super(),this.client=new a.Ay,(async()=>{let e=await (0,l.P2)("$scramjet",1),t=await e.get("cookies","cookies");t&&this.cookieStore.load(t)})(),addEventListener("message",async({data:e})=>{if("scramjet$type"in e){if("scramjet$token"in e){let t=this.syncPool[e.scramjet$token];delete this.syncPool[e.scramjet$token],t(e);return}if("registerServiceWorker"===e.scramjet$type)return void this.serviceWorkers.push(new n.H(e.port,e.origin));if("cookie"===e.scramjet$type){this.cookieStore.setCookies([e.cookie],new URL(e.url));let t=await (0,l.P2)("$scramjet",1);await t.put("cookies",JSON.parse(this.cookieStore.dump()),"cookies")}"loadConfig"===e.scramjet$type&&(this.config=e.config)}})}async dispatch(e,t){let r,n=this.synctoken++,i=new Promise(e=>r=e);return this.syncPool[n]=r,t.scramjet$token=n,e.postMessage(t),await i}async loadConfig(){if(this.config)return;let e=await (0,l.P2)("$scramjet",1);this.config=await e.get("config","config"),this.config&&((0,c.Nk)(this.config),await (0,s.n$)())}route({request:e}){return!!e.url.startsWith(location.origin+this.config.prefix)||!!e.url.startsWith(location.origin+this.config.files.wasm)}async fetch({request:e,clientId:t}){this.config||await this.loadConfig();let r=await self.clients.get(t);return i.Pf.call(this,e,r)}}},236:function(e,t,r){r.d(t,{Ay:()=>S,DD:()=>w});let n=globalThis.fetch,i=globalThis.SharedWorker,a=globalThis.localStorage,s=globalThis.navigator.serviceWorker,o=MessagePort.prototype.postMessage,l={prototype:{send:WebSocket.prototype.send},CLOSED:WebSocket.CLOSED,CLOSING:WebSocket.CLOSING,CONNECTING:WebSocket.CONNECTING,OPEN:WebSocket.OPEN};async function c(){let e=Promise.race([Promise.any((await self.clients.matchAll({type:"window",includeUncontrolled:!0})).map(async e=>{let t,r=await (t=new MessageChannel,new Promise(r=>{e.postMessage({type:"getPort",port:t.port2},[t.port2]),t.port1.onmessage=e=>{r(e.data)}}));return await u(r),r})),new Promise((e,t)=>setTimeout(t,1e3,TypeError("timeout")))]);try{return await e}catch(e){if(e instanceof AggregateError)throw console.error("bare-mux: failed to get a bare-mux SharedWorker MessagePort as all clients returned an invalid MessagePort."),Error("All clients returned an invalid MessagePort.");return console.warn("bare-mux: failed to get a bare-mux SharedWorker MessagePort within 1s, retrying"),await c()}}function u(e){let t=new MessageChannel,r=new Promise((e,r)=>{t.port1.onmessage=t=>{"pong"===t.data.type&&e()},setTimeout(r,1500)});return o.call(e,{message:{type:"ping"},port:t.port2},[t.port2]),r}function d(e,t){let r=new i(e,"bare-mux-worker");return t&&s.addEventListener("message",t=>{if("getPort"===t.data.type&&t.data.port){console.debug("bare-mux: recieved request for port from sw");let r=new i(e,"bare-mux-worker");o.call(t.data.port,r.port,[r.port])}}),r.port}let h=null;class p{constructor(e){this.channel=new BroadcastChannel("bare-mux"),e instanceof MessagePort||e instanceof Promise?this.port=e:this.createChannel(e,!0)}createChannel(e,t){if(self.clients)this.port=c(),this.channel.onmessage=e=>{"refreshPort"===e.data.type&&(this.port=c())};else if(e&&SharedWorker){if(!e.startsWith("/")&&!e.includes("://"))throw Error("Invalid URL. Must be absolute or start at the root.");this.port=d(e,t),console.debug("bare-mux: setting localStorage bare-mux-path to",e),a["bare-mux-path"]=e}else{if(!SharedWorker)throw Error("Unable to get a channel to the SharedWorker.");{let e=a["bare-mux-path"];if(console.debug("bare-mux: got localStorage bare-mux-path:",e),!e)throw Error("Unable to get bare-mux workerPath from localStorage.");this.port=d(e,t)}}}async sendMessage(e,t){this.port instanceof Promise&&(this.port=await this.port);try{await u(this.port)}catch{return console.warn("bare-mux: Failed to get a ping response from the worker within 1.5s. Assuming port is dead."),this.createChannel(),await this.sendMessage(e,t)}let r=new MessageChannel,n=[r.port2,...t||[]],i=new Promise((e,t)=>{r.port1.onmessage=r=>{let n=r.data;"error"===n.type?t(n.error):e(n)}});return o.call(this.port,{message:e,port:r.port2},n),await i}}class f extends EventTarget{constructor(e,t=[],r,n){super(),this.protocols=t,this.readyState=l.CONNECTING,this.url=e.toString(),this.protocols=t;const i=e=>{this.protocols=e,this.readyState=l.OPEN;let t=new Event("open");this.dispatchEvent(t)},a=async e=>{let t=new MessageEvent("message",{data:e});this.dispatchEvent(t)},s=(e,t)=>{this.readyState=l.CLOSED;let r=new CloseEvent("close",{code:e,reason:t});this.dispatchEvent(r)},o=()=>{this.readyState=l.CLOSED;let e=new Event("error");this.dispatchEvent(e)};this.channel=new MessageChannel,this.channel.port1.onmessage=e=>{"open"===e.data.type?i(e.data.args[0]):"message"===e.data.type?a(e.data.args[0]):"close"===e.data.type?s(e.data.args[0],e.data.args[1]):"error"===e.data.type&&o()},r.sendMessage({type:"websocket",websocket:{url:e.toString(),protocols:t,requestHeaders:n,channel:this.channel.port2}},[this.channel.port2])}send(...e){if(this.readyState===l.CONNECTING)throw new DOMException("Failed to execute 'send' on 'WebSocket': Still in CONNECTING state.");let t=e[0];t.buffer&&(t=t.buffer.slice(t.byteOffset,t.byteOffset+t.byteLength)),o.call(this.channel.port1,{type:"data",data:t},t instanceof ArrayBuffer?[t]:[])}close(e,t){o.call(this.channel.port1,{type:"close",closeCode:e,closeReason:t})}}function g(e,t,r){console.error(`error while processing '${r}': `,t),e.postMessage({type:"error",error:t})}let m=["ws:","wss:"],y=[101,204,205,304],b=[301,302,303,307,308];class w{constructor(e){this.worker=new p(e)}async getTransport(){return(await this.worker.sendMessage({type:"get"})).name}async setTransport(e,t,r){await this.setManualTransport(`
 			const { default: BareTransport } = await import("${e}");

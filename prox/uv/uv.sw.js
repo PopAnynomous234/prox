@@ -10,39 +10,147 @@
         uvVersion.textContent = ${JSON.stringify("3.2.10")};
         uvBuild.textContent = ${JSON.stringify("92d9075")};
     `;return`<!DOCTYPE html>
-        <html>
-        <head>
-        <meta charset='utf-8' />
-        <title>Error</title>
-        <style>
-        * { background-color: white }
-        </style>
-        </head>
-        <body>
-        <h1 id='errorTitle'>Error processing your request</h1>
-        <hr />
-        <p>Failed to load <b id="fetchedURL"></b></p>
-        <p id="errorMessage">Internal Server Error</p>
-        <textarea id="errorTrace" cols="40" rows="10" readonly></textarea>
-        <p>Try:</p>
-        <ul>
-        <li>Checking your internet connection</li>
-        <li>Verifying you entered the correct address</li>
-        <li>Clearing the site data</li>
-        <li>Contacting <b id="uvHostname"></b>'s administrator</li>
-        <li>Verify the server isn't censored</li>
-        </ul>
-        <p>If you're the administrator of <b id="uvHostname"></b>, try:</p>
-        <ul>
-        <li>Restarting your server</li>
-        <li>Updating Ultraviolet</li>
-        <li>Troubleshooting the error on the <a href="https://github.com/titaniumnetwork-dev/Ultraviolet" target="_blank">GitHub repository</a></li>
-        </ul>
-        <button id="reload">Reload</button>
-        <hr />
-        <p><i>Ultraviolet v<span id="uvVersion"></span> (build <span id="uvBuild"></span>)</i></p>
-        <script src="${"data:application/javascript,"+encodeURIComponent(s)}"><\/script>
-        </body>
-        </html>
+<html>
+<head>
+<meta charset='utf-8' />
+<title>Error</title>
+<style>
+:root {
+    --deep: #000000;
+    --shallow: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --beach: #ffffff;
+    --shore: rgba(255, 255, 255, 0.55);
+    --font-sans: -apple-system, system-ui, BlinkMacSystemFont, sans-serif;
+    --font-monospace: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: var(--font-sans);
+    color: var(--beach);
+    background-color: transparent;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.05), transparent 45%),
+        linear-gradient(160deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+}
+
+body {
+    max-width: 32em;
+    padding: 2.5em 3em;
+    border-radius: 1.2em;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+#errorTitle {
+    background: linear-gradient(90deg, #ffffff, #a8a8a8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 1.8em;
+    margin: 0 0 0.4em 0;
+    letter-spacing: -0.02em;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid var(--glass-border);
+    margin: 1em 0;
+}
+
+#errorMessage {
+    color: var(--shore);
+    font-weight: 600;
+}
+
+textarea {
+    width: 100%;
+    resize: none;
+    background-color: var(--shallow);
+    border: 1px solid var(--glass-border);
+    border-radius: 0.6em;
+    padding: 0.6em;
+    font-family: var(--font-monospace);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+p { margin: 0.6em 0; }
+
+ul {
+    margin: 0.3em 0 0.8em 0;
+    padding-left: 1.2em;
+    color: var(--shore);
+}
+
+a {
+    color: var(--beach);
+    text-decoration: underline;
+    text-decoration-color: var(--shore);
+}
+
+#fetchedURL, #uvHostname {
+    color: var(--beach);
+    font-weight: 600;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 0.6em;
+    padding: 0.6em 1.2em;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ffffff, #cfcfcf);
+    color: #000000;
+    box-shadow: 0 4px 18px rgba(255, 255, 255, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+    background: linear-gradient(135deg, #ffffff, #ffffff);
+    box-shadow: 0 6px 22px rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+</style>
+</head>
+<body>
+<h1 id='errorTitle'>Error processing your request</h1>
+<hr />
+<p>Failed to load <b id="fetchedURL"></b></p>
+<p id="errorMessage">Internal Server Error</p>
+<textarea id="errorTrace" cols="40" rows="10" readonly></textarea>
+<p>Try:</p>
+<ul>
+<li>Checking your internet connection</li>
+<li>Verifying you entered the correct address</li>
+<li>Clearing the site data</li>
+<li>Contacting <b id="uvHostname"></b>'s administrator</li>
+<li>Verify the server isn't censored</li>
+</ul>
+<p>If you're the administrator of <b id="uvHostname"></b>, try:</p>
+<ul>
+<li>Restarting your server</li>
+<li>Updating Ultraviolet</li>
+<li>Troubleshooting the error on the <a href="https://github.com/titaniumnetwork-dev/Ultraviolet" target="_blank">GitHub repository</a></li>
+</ul>
+<button id="reload">Reload</button>
+<hr />
+<p><i>Ultraviolet v<span id="uvVersion"></span> (build <span id="uvBuild"></span>)</i></p>
+<script src="${"data:application/javascript,"+encodeURIComponent(s)}"><\/script>
+</body>
+</html>
         `}function T(a,e){let s={"content-type":"text/html"};return crossOriginIsolated&&(s["Cross-Origin-Embedder-Policy"]="require-corp"),new Response(E(String(a),e),{status:500,headers:s})}})();
 //# sourceMappingURL=uv.sw.js.map
