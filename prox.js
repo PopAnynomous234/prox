@@ -353,12 +353,7 @@ async function navigateToUrl(inputUrl) {
         return;
     }
 
-    const normalizeUrl = (url) => {
-        if (!url.startsWith("http")) return "https://" + url;
-        return url;
-    };
-
-    const url = search(inputUrl) || normalizeUrl(inputUrl);
+    const url = search(inputUrl);
     console.log(`📍 After normalization: ${url}, engine: ${proxyEngine}`);
 
     // Ensure service worker is ready and controlling the page before navigating
@@ -663,6 +658,19 @@ function setupFrameInjection(frame) {
             };
 
             doc.head.appendChild(script);
+
+            // NOTE: there used to be a manual click handler here that did
+            // `win.location.href = a.href`. Scramjet exposes a decoded,
+            // real-looking `.href` to scripts running *inside* its sandbox
+            // so proxied sites' own JS doesn't break — but this handler runs
+            // from the top-level Nebula script reaching into the iframe from
+            // outside that sandbox, so `a.href` handed it the plain real URL
+            // (e.g. https://twitch.tv/...), and setting that directly on the
+            // frame's real `location` jumped straight past the /scramjet/
+            // prefix — i.e. exactly the "link goes to the raw site instead
+            // of through the proxy" bug. Scramjet already rewrites `<a>`
+            // href attributes in the served HTML and handles normal
+            // click-to-navigate correctly on its own; no listener needed.
 
         } catch (e) {
             console.warn("Injection blocked:", e);

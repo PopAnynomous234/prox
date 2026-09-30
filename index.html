@@ -1,1573 +1,320 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nebula Browser</title>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nebula Browser</title>
 
-    <!--
-      FIX: these scripts were loading synchronously in <head>, before <body> existed.
-      register.js does document.getElementById(...) on elements defined in <body> —
-      without `defer` those lookups returned null and the page threw on load
-      (e.g. `form.onsubmit = ...` on a null form). `defer` also preserves execution
-      order, which register.js relies on ($scramjetLoadController, BareMux, __uv$config).
-    -->
-    <script src="/prox/scram/scramjet.all.js" defer></script>
-    <script src="/prox/uv/uv.bundle.js" defer></script>
-    <script src="/prox/uv/uv.config.js" defer></script>
-    <script src="/prox/baremux/index.js" defer></script>
-    <script src="/prox.js" defer></script>
-    <script src="/register.js" defer></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-     <link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- defer keeps execution order; register.js relies on it -->
+<script src="/prox/scram/scramjet.all.js" defer></script>
+<script src="/prox/uv/uv.bundle.js" defer></script>
+<script src="/prox/uv/uv.config.js" defer></script>
+<script src="/prox/baremux/index.js" defer></script>
+<script src="/prox.js" defer></script>
+<script src="/register.js" defer></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-        :root {
-            --accent: #ffffff;
-            --bg-dark: #000000;
-            --surface: #0a0a0a;
-            --toolbar: #1a1a1a;
-            --text: #e0e0e0;
-            --text-dim: #889;
-            --tab-width: 180px;
-        }
-  .home-screen {
-    /* Combined: The gradient (top layer) and the Image (bottom layer) */
-    background: transparent;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    /* Layout */
-    height: 100%;
-    width:100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-        .home-screen h1 { font-size: 3rem; margin-bottom: 2rem; letter-spacing: -0.05em; font-family: 'JetBrains Mono', monospace; }
-.home-screen h3 {
-   color:#ffffff;
-   font-size: 1.2rem;
-   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-}
-.home-screen img {
-   width: 10rem;
-   height: 10rem;
-   filter: drop-shadow(0 10px 15px rgba(255, 255, 255, 0.5));
-}
-
-
-        .home-screen h1 span { color: var(--accent); }
-        .bookmarks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; max-width: 37.5rem; }
-        .bookmark {
-            display: flex; flex-direction: column; align-items: center; gap: 0.6rem; cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .bookmark:hover { transform: translateY(-0.3rem); }
-        .icon-box {
-            width: 4rem; height: 4rem; background: var(--surface); border-radius: 1rem;
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.05); color: var(--accent);
-        }
-        .bookmark span { font-size: 0.75rem; font-weight: 500; color: var(--text-dim); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
-   
-
-#nav-inspect {
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    padding: 0 0.6rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1rem;
-}
-
-#nav-inspect:hover {
-    color: var(--accent); /* #ffffff */
-    text-shadow: 0 0 0.6rem var(--accent);
-}
-
-/* Ensure the form doesn't squash the buttons */
-#sj-form {
-    display: flex;
-    align-items: center;
-}
-
-.modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-    display: flex; align-items: center; justify-content: center; z-index: 9999;
-}
-.modal-content {
-    background: var(--surface); border: 1px solid var(--accent);
-    padding: 1.25rem; border-radius: 0.75rem; width: 90%; max-width: 21.875rem;
-    box-shadow: 0 0 1.25rem rgba(255, 255, 255, 0.15);
-}
-.modal-content h3 { color: var(--accent); margin-top: 0; font-size: 1.1rem; }
-.modal-content input {
-    width: 100%; background: #000; border: 1px solid #333;
-    color: white; padding: 0.5rem; margin: 0.6rem 0; border-radius: 0.25rem; font-size: 0.9rem;
-}
-.modal-content input:focus { border-color: var(--accent); outline: none; }
-#bm-save { background: var(--accent); color: black; border: none; padding: 0.5rem 0.9rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.9rem; }
-#bm-cancel { background: transparent; color: white; border: none; margin-right: 0.6rem; cursor: pointer; font-size: 0.9rem; }
-
-/* The Navigation Button */
-#nav-add-bookmark {
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    padding: 0 0.6rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1.125rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#nav-add-bookmark:hover {
-    color: var(--accent); /* #ffffff */
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 0.5rem var(--accent));
-}
-
-/* Modal Styling Enhancements */
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-}
-
-/* Modal Buttons */
-#bm-save {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    padding: 0.5rem 1.25rem;
-    border-radius: 0.375rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    font-size: 0.9rem;
-}
-
-#bm-save:hover {
-    opacity: 0.9;
-    box-shadow: 0 0 0.9rem rgba(255, 255, 255, 0.3);
-}
-
-#bm-cancel {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 0.9rem;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-#bm-cancel:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* The Bookmark Items in the bar */
-.bookmark-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.3rem 0.75rem;
-    background: var(--surface);
-    border-radius: 0.375rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    cursor: pointer;
-    transition: all 0.2s;
-    user-select: none;
-    max-width: 9.375rem;
-    font-size: 0.8rem;
-}
-
-.bookmark-item:hover {
-    border-color: var(--accent);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.bookmark-icon {
-    width: 1rem;
-    height: 1rem;
-    pointer-events: none;
-    flex-shrink: 0;
-}
-
-.bookmark-item span {
-    font-size: 0.8rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text);
-}
-@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600&family=Outfit:wght@300;400;500&display=swap");
-
-/* ═══════════════════════════════════════════════════════════════════════
-   AURORA BROWSER — Premium Dark Theme (Black & White)
-   Performance strategy: transform/opacity only animations (compositor-only),
-   no blur/backdrop-filter, no box-shadow on animated elements.
-   All color transitions on static elements only.
-   ═══════════════════════════════════════════════════════════════════════ */
-
 :root {
-  /* Palette — pure black & white */
-  --void:        #000000;   /* Pure black */
-  --base:        #0a0a0a;
-  --surface:     #141414;
-  --elevated:    #1f1f1f;
-  --overlay:     #2a2a2a;
-  --border-dim:  #333333;
-  --border:      #4a4a4a;
-  --border-lit:  #5a5a5a;
-
-  /* White accent spectrum */
-  --aurora-1:     #ffffff;   /* Primary White */
-  --aurora-2:     #f5f5f5;   /* Light White */
-  --aurora-3:     #e0e0e0;   /* Gray White */
-  --aurora-4:     #ffffff;   /* Pure white for brilliance */
-
-  /* Text */
-  --text-bright:  #ffffff;   /* Pure white */
-  --text:         #d0d0d0;
-  --text-muted:   #888888;
-  --text-ghost:   #555555;
-
-  /* Semantic */
-  --accent:       var(--aurora-1);
-  --accent-glow:  rgba(255, 255, 255, 0.15); /* White glow */
-  --danger:       #ff5c5c;
-  --danger-bg:    rgba(255, 92, 92, 0.12);
-
-  /* Geometry */
-  --r-tab:        0.5rem 0.5rem 0 0;
-  --r-sm:         0.375rem;
-  --r-md:         0.625rem;
-  --r-pill:       6.25rem;
-
-  /* Motion */
-  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out:  cubic-bezier(0.45, 0, 0.55, 1);
-  --t-fast:       90ms;
-  --t-mid:        180ms;
-  --t-slow:       320ms;
-
-  --font-display: "Syne", system-ui, sans-serif;
-  --font-body:    "Outfit", system-ui, sans-serif;
+  --void:#000; --base:#0a0a0a; --surface:#141414; --elevated:#1f1f1f; --overlay:#2a2a2a;
+  --border-dim:#333; --border:#4a4a4a; --border-lit:#5a5a5a;
+  --aurora-1:#fff; --aurora-2:#f5f5f5; --aurora-3:#e0e0e0;
+  --accent:#fff;
+  --text-bright:#fff; --text:#d0d0d0; --text-muted:#888; --text-dim:#889; --text-ghost:#555;
+  --danger:#ff5c5c; --danger-bg:rgba(255,92,92,.12);
+  --r-tab:.5rem .5rem 0 0; --r-sm:.375rem; --r-pill:6.25rem;
+  --ease-out:cubic-bezier(.16,1,.3,1); --ease-in-out:cubic-bezier(.45,0,.55,1);
+  --t-fast:90ms; --t-mid:180ms; --t-slow:320ms;
+  --font-display:"Syne",system-ui,sans-serif; --font-body:"Outfit",system-ui,sans-serif;
 }
 
-/* ─── KEYFRAMES (compositor-only: transform + opacity) ──────────────── */
-
-@keyframes slide-down {
-  from { opacity: 0; transform: translateY(-0.4rem); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes tab-in {
-  from { opacity: 0; transform: scaleX(0.85) translateY(0.25rem); transform-origin: left center; }
-  to   { opacity: 1; transform: scaleX(1)    translateY(0);   }
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1;    transform: scale(1);    }
-  50%       { opacity: 0.5; transform: scale(0.75); }
-}
-
-@keyframes shimmer-bar {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(400%);  }
-}
-
-@keyframes favicon-spin {
-  from { transform: rotate(0deg);   }
-  to   { transform: rotate(360deg); }
-}
-
-@keyframes bookmark-pop {
-  0%   { transform: scale(1);    }
-  40%  { transform: scale(1.35); }
-  70%  { transform: scale(0.9);  }
-  100% { transform: scale(1);    }
-}
-
+@keyframes slide-down { from{opacity:0;transform:translateY(-.4rem)} to{opacity:1;transform:translateY(0)} }
+@keyframes tab-in { from{opacity:0;transform:scaleX(.85) translateY(.25rem);transform-origin:left center} to{opacity:1;transform:scaleX(1) translateY(0)} }
+@keyframes favicon-spin { to{transform:rotate(360deg)} }
 @keyframes aurora-drift {
-  0%   { transform: translate(0, 0)    rotate(0deg);   }
-  33%  { transform: translate(0.25rem, -0.2rem) rotate(1deg); }
-  66%  { transform: translate(-0.2rem, 0.125rem) rotate(-1deg);}
-  100% { transform: translate(0, 0)    rotate(0deg);   }
+  0%,100%{transform:translate(0,0) rotate(0)} 33%{transform:translate(.25rem,-.2rem) rotate(1deg)} 66%{transform:translate(-.2rem,.125rem) rotate(-1deg)}
 }
 
-/* ─── BASE ──────────────────────────────────────────────────────────── */
-
-*, *::before, *::after { box-sizing: border-box; }
-
+*,*::before,*::after { box-sizing:border-box; }
 body {
-  font-family: var(--font-body);
-  margin: 0;
-  background: transparent;
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  font-size: 16px;
+  font-family:var(--font-body); margin:0; background:transparent; color:var(--text);
+  display:flex; flex-direction:column; height:100vh; overflow:hidden;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; font-size:16px;
 }
 
-/* ─── BROWSER SHELL ─────────────────────────────────────────────────── */
+/* shell */
+#browser-ui { display:flex; flex-direction:column; flex-shrink:0; animation:slide-down var(--t-slow) var(--ease-out) both; }
 
-#browser-ui {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  animation: slide-down var(--t-slow) var(--ease-out) both;
-}
-
-/* ─── TAB STRIP ─────────────────────────────────────────────────────── */
-
-#tabs-strip {
-  display: flex;
-  align-items: flex-end;
-  padding: 0.625rem 0.5rem 0;
-  background: var(--void);
-  gap: 0.2rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  position: relative;
-}
-
-#tabs-strip::after {
-  content: "";
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 1px;
-  background: var(--border-dim);
-}
-
-#tabs-strip::-webkit-scrollbar { display: none; }
-
-/* ─── TAB ───────────────────────────────────────────────────────────── */
-
+/* tabs */
+#tabs-strip { display:flex; align-items:flex-end; padding:.625rem .5rem 0; background:var(--void); gap:.2rem; overflow-x:auto; scrollbar-width:none; position:relative; }
+#tabs-strip::after { content:""; position:absolute; bottom:0; left:0; right:0; height:1px; background:var(--border-dim); }
+#tabs-strip::-webkit-scrollbar { display:none; }
 .tab {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 0.875rem 0.56rem;
-  background: transparent;
-  border-radius: var(--r-tab);
-  border: 1px solid transparent;
-  border-bottom: none;
-  max-width: 13.125rem;
-  min-width: 7.5rem;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 400;
-  cursor: pointer;
-  user-select: none;
-  color: var(--text-muted);
-  position: relative;
-  overflow: hidden;
-
-  /* Compositor-only transitions */
-  transition:
-    color         var(--t-mid) var(--ease-out),
-    background    var(--t-mid) var(--ease-out),
-    border-color  var(--t-mid) var(--ease-out),
-    transform     var(--t-fast) var(--ease-out);
-
-  animation: tab-in var(--t-slow) var(--ease-out) both;
+  display:flex; align-items:center; padding:.5rem .875rem .56rem; background:transparent;
+  border-radius:var(--r-tab); border:1px solid transparent; border-bottom:none;
+  max-width:13.125rem; min-width:7.5rem; font-family:var(--font-body); font-size:.75rem; font-weight:400;
+  cursor:pointer; user-select:none; color:var(--text-muted); position:relative; overflow:hidden;
+  transition:color var(--t-mid) var(--ease-out),background var(--t-mid) var(--ease-out),border-color var(--t-mid) var(--ease-out),transform var(--t-fast) var(--ease-out);
+  animation:tab-in var(--t-slow) var(--ease-out) both;
 }
-
-.tab-favicon {
-  width: 1rem;
-  height: 1rem;
-  margin-right: 0.375rem;
-  border-radius: 0.15rem;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
-/* Tab shimmer on hover — cheap pseudo-element sweep */
+.tab-favicon { width:1rem; height:1rem; margin-right:.375rem; border-radius:.15rem; flex-shrink:0; object-fit:contain; }
 .tab::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 40%,
-    rgba(255,255,255,0.045) 50%,
-    transparent 60%
-  );
-  transform: translateX(-100%);
-  transition: transform 0ms;
-  pointer-events: none;
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.045) 50%,transparent 60%);
+  transform:translateX(-100%); transition:transform 0ms;
 }
-
-.tab:hover::before {
-  transform: translateX(100%);
-  transition: transform 500ms var(--ease-out);
-}
-
-.tab:hover {
-  background: var(--surface);
-  color: var(--text);
-  border-color: var(--border-dim);
-}
-
-.tab:active {
-  transform: translateY(0.06rem);
-}
-
-/* Active tab */
-.tab.active {
-  background: var(--elevated);
-  border-color: var(--border);
-  color: var(--text-bright);
-  z-index: 2;
-  font-weight: 500;
-}
-
-/* Active tab accent line — white gradient */
-.tab.active::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0.75rem; right: 0.75rem;
-  height: 0.125rem;
-  background: linear-gradient(90deg, var(--aurora-1), var(--aurora-2));
-  border-radius: 0 0 0.2rem 0.2rem;
-}
-
-/* Active tab — cover the bottom border of strip */
-.tab.active {
-  margin-bottom: -1px;
-  padding-bottom: 0.625rem;
-}
-
-.tab-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  margin-right: 0.375rem;
-  letter-spacing: 0.015em;
-}
-
+.tab:hover::before { transform:translateX(100%); transition:transform 500ms var(--ease-out); }
+.tab:hover { background:var(--surface); color:var(--text); border-color:var(--border-dim); }
+.tab:active { transform:translateY(.06rem); }
+.tab.active { background:var(--elevated); border-color:var(--border); color:var(--text-bright); z-index:2; font-weight:500; margin-bottom:-1px; padding-bottom:.625rem; }
+.tab.active::after { content:""; position:absolute; top:0; left:.75rem; right:.75rem; height:.125rem; background:linear-gradient(90deg,var(--aurora-1),var(--aurora-2)); border-radius:0 0 .2rem .2rem; }
+.tab-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; margin-right:.375rem; letter-spacing:.015em; }
 .tab-close {
-  border: none;
-  background: transparent;
-  color: var(--text-ghost);
-  cursor: pointer;
-  font-size: 0.7rem;
-  width: 1.125rem;
-  height: 1.125rem;
-  border-radius: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition:
-    background  var(--t-fast),
-    color       var(--t-fast),
-    transform   var(--t-fast);
+  border:none; background:transparent; color:var(--text-ghost); cursor:pointer; font-size:.7rem;
+  width:1.125rem; height:1.125rem; border-radius:.25rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:background var(--t-fast),color var(--t-fast),transform var(--t-fast);
 }
-
-.tab-close:hover {
-  background: var(--danger-bg);
-  color: var(--danger);
-  transform: scale(1.15);
-}
-
-.tab-close:active {
-  transform: scale(0.9);
-}
-
-/* Loading indicator — dot on tab favicon */
-.tab.loading .tab-favicon {
-  animation: favicon-spin 800ms linear infinite;
-  opacity: 0.6;
-}
-
-/* ─── ADD TAB ───────────────────────────────────────────────────────── */
+.tab-close:hover { background:var(--danger-bg); color:var(--danger); transform:scale(1.15); }
+.tab-close:active { transform:scale(.9); }
+.tab.loading .tab-favicon { animation:favicon-spin 800ms linear infinite; opacity:.6; }
 
 #add-tab-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-ghost);
-  width: 1.875rem;
-  height: 1.875rem;
-  border-radius: 50%;
-  cursor: pointer;
-  margin-bottom: 0.2rem;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  transition:
-    background  var(--t-mid),
-    color       var(--t-mid),
-    transform   var(--t-fast);
+  background:transparent; border:none; color:var(--text-ghost); width:1.875rem; height:1.875rem; border-radius:50%;
+  cursor:pointer; margin-bottom:.2rem; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1rem;
+  transition:background var(--t-mid),color var(--t-mid),transform var(--t-fast);
 }
+#add-tab-btn:hover { background:var(--surface); color:var(--text); transform:rotate(90deg) scale(1.1); }
+#add-tab-btn:active { transform:rotate(90deg) scale(.92); }
 
-#add-tab-btn:hover {
-  background: var(--surface);
-  color: var(--text);
-  transform: rotate(90deg) scale(1.1);
+/* nav bar */
+#nav-bar { background:var(--base); padding:.44rem .625rem .375rem; display:flex; align-items:center; gap:.375rem; border-bottom:1px solid var(--border-dim); position:relative; }
+#nav-bar::before { content:""; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--border-lit) 30%,var(--border-lit) 70%,transparent); opacity:.5; }
+.nav-controls { display:flex; gap:.125rem; }
+.nav-controls button, .ibtn {
+  background:transparent; border:none; color:var(--text-muted); padding:.375rem; border-radius:var(--r-sm);
+  cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:.9rem;
+  transition:background var(--t-mid),color var(--t-mid),transform var(--t-fast);
 }
+.nav-controls button:hover, .ibtn:hover { background:var(--surface); color:var(--text-bright); }
+.nav-controls button:active, .ibtn:active { transform:scale(.88); }
+.ibtn svg, .ibtn i { pointer-events:none; }
+#nav-bookmark.active { color:var(--aurora-1); }
+#nav-bookmark.active svg { fill:currentColor; }
 
-#add-tab-btn:active {
-  transform: rotate(90deg) scale(0.92);
-}
-
-/* ─── NAV BAR ───────────────────────────────────────────────────────── */
-
-#nav-bar {
-  background: var(--base);
-  padding: 0.44rem 0.625rem 0.375rem;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  border-bottom: 1px solid var(--border-dim);
-  position: relative;
-}
-
-/* Subtle top highlight line */
-#nav-bar::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-lit) 30%, var(--border-lit) 70%, transparent);
-  opacity: 0.5;
-}
-
-/* ─── NAV ICON BUTTONS ──────────────────────────────────────────────── */
-
-.nav-controls {
-  display: flex;
-  gap: 0.125rem;
-}
-
-.nav-controls button,
-#nav-bookmark {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 0.375rem;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background  var(--t-mid),
-    color       var(--t-mid),
-    transform   var(--t-fast);
-  position: relative;
-  font-size: 0.9rem;
-}
-
-.nav-controls button:hover,
-#nav-bookmark:hover {
-  background: var(--surface);
-  color: var(--text-bright);
-}
-
-.nav-controls button:active,
-#nav-bookmark:active {
-  transform: scale(0.88);
-}
-
-/* Bookmark star active — with pop animation */
-#nav-bookmark.active {
-  color: var(--aurora-4);
-}
-
-#nav-bookmark.just-activated {
-  animation: bookmark-pop var(--t-slow) var(--ease-out);
-}
-
-/* ─── ADDRESS BAR ───────────────────────────────────────────────────── */
-
+/* address bar */
 #sj-form {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--void);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--r-pill);
-  padding: 0 0.875rem;
-  height: 2rem;
-  position: relative;
-  overflow: hidden;
-  transition:
-    border-color  var(--t-mid),
-    background    var(--t-mid);
-  margin: 0 0.5rem;
+  flex:1; display:flex; align-items:center; gap:.5rem; background:var(--void); border:1px solid var(--border-dim);
+  border-radius:var(--r-pill); padding:0 .875rem; height:2rem; position:relative; overflow:hidden; margin:0 .5rem;
+  transition:border-color var(--t-mid),background var(--t-mid);
 }
+#sj-form::after { content:""; position:absolute; top:0; bottom:0; width:3.75rem; background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent); transform:translateX(-5rem); pointer-events:none; }
+#sj-form:focus-within { border-color:var(--aurora-1); background:var(--base); }
+#sj-form:focus-within::after { transform:translateX(37.5rem); transition:transform 500ms var(--ease-out); }
+#sj-address { width:100%; background:none; border:none; color:var(--text-bright); font-family:var(--font-body); font-size:.8rem; outline:none; letter-spacing:.01em; }
+#sj-address::placeholder { color:var(--text-ghost); }
+#sj-address::selection { background:rgba(255,255,255,.25); }
 
-/* Shimmer sweep on focus */
-#sj-form::after {
-  content: "";
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 3.75rem;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-  transform: translateX(-5rem);
-  pointer-events: none;
-  transition: none;
-}
-
-#sj-form:focus-within {
-  border-color: var(--aurora-1);
-  background: var(--base);
-}
-
-#sj-form:focus-within::after {
-  transform: translateX(37.5rem);
-  transition: transform 500ms var(--ease-out);
-}
-
-#sj-address {
-  width: 100%;
-  background: none;
-  border: none;
-  color: var(--text-bright);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 400;
-  outline: none;
-  letter-spacing: 0.01em;
-}
-
-#sj-address::placeholder {
-  color: var(--text-ghost);
-}
-
-#sj-address::selection {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* Protocol badge */
-#sj-protocol {
-  font-size: 0.7rem;
-  color: var(--aurora-3);
-  font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
-  opacity: 0.8;
-}
-
-/* ─── ENGINE SELECTOR ──────────────────────────────────────────────── */
-
-#engine-selector {
-  background: var(--surface);
-  border: 1px solid var(--border-dim);
-  color: var(--text);
-  padding: 0.35rem 0.6rem;
-  border-radius: 0.3rem;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 200ms var(--ease-out);
-  margin: 0 0.5rem;
-  flex-shrink: 0;
-}
-
-#engine-selector:hover {
-  border-color: var(--accent);
-  background: var(--elevated);
-  color: var(--accent);
-}
-
-#engine-selector:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.2);
-}
-
-#engine-selector option {
-  background: var(--surface);
-  color: var(--text);
-}
-
-/* ─── FULLSCREEN BUTTON ─────────────────────────────────────────────── */
-
-#fullscreen-toggle {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 0.375rem;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  transition:
-    background  var(--t-mid),
-    color       var(--t-mid),
-    transform   var(--t-fast);
-  position: relative;
-  flex-shrink: 0;
-}
-
-#fullscreen-toggle:hover {
-  background: var(--surface);
-  color: var(--text-bright);
-}
-
-#fullscreen-toggle:active {
-  transform: scale(0.88);
-}
-
-#fullscreen-toggle i {
-  pointer-events: none;
-}
-
-#fullscreen-toggle .fs-fallback {
-  display: none;
-}
-
-/* Show fallback only if SVG icon fails to load */
-#fullscreen-toggle:has(> i:empty) .fs-fallback {
-  display: inline-block;
-  font-size: 1rem;
-  line-height: 1;
-  color: inherit;
-  pointer-events: none;
-}
-
-#search-engine-selector {
-  background: var(--surface);
-  border: 1px solid var(--border-dim);
-  color: var(--text);
-  padding: 0.35rem 0.6rem;
-  border-radius: 0.3rem;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 200ms var(--ease-out);
-  margin: 0 0.5rem;
-  flex-shrink: 0;
-}
-
-#search-engine-selector:hover {
-  border-color: var(--accent);
-  background: var(--elevated);
-  color: var(--accent);
-}
-
-#search-engine-selector:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.2);
-}
-
-#search-engine-selector option {
-  background: var(--surface);
-  color: var(--text);
-}
-
-/* ─── WISP SERVER INPUT ─────────────────────────────────────────────── */
-
-#wisp-url-input {
-  background: var(--surface);
-  border: 1px solid var(--border-dim);
-  color: var(--text);
-  padding: 0.35rem 0.6rem;
-  border-radius: 0.3rem;
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  width: 11rem;
-  flex-shrink: 0;
-  outline: none;
-  transition: all 200ms var(--ease-out);
-}
-
-#wisp-url-input:focus,
-#wisp-url-input:hover {
-  border-color: var(--accent);
-  background: var(--elevated);
-  color: var(--accent);
-}
-
-#wisp-save-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 0.375rem;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  flex-shrink: 0;
-  transition:
-    background  var(--t-mid),
-    color       var(--t-mid),
-    transform   var(--t-fast);
-}
-
-#wisp-save-btn:hover {
-  background: var(--surface);
-  color: var(--text-bright);
-}
-
-#wisp-save-btn:active {
-  transform: scale(0.88);
-}
-
-/* ─── LOADING BAR ───────────────────────────────────────────────────── */
-
-#loading-bar {
-  position: absolute;
-  bottom: 0; left: 0;
-  height: 0.125rem;
-  width: 0%;
-  background: linear-gradient(90deg, var(--aurora-1), var(--aurora-2), var(--aurora-3));
-  transition: width 200ms var(--ease-out);
-  pointer-events: none;
-  z-index: 10;
-}
-
-#loading-bar.loading {
-  width: 80%;
-}
-
-#loading-bar.done {
-  width: 100%;
-  opacity: 0;
-  transition: width 150ms, opacity 300ms 100ms;
-}
-
-/* Traveling shimmer on loading bar */
-#loading-bar::after {
-  content: "";
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 5rem;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-  animation: shimmer-bar 1.2s linear infinite;
-}
-
-/* ─── BOOKMARK BAR ──────────────────────────────────────────────────── */
-
-#bookmark-bar {
-  display: flex;
-  align-items: center;
-  background: var(--base);
-  padding: 0.2rem 0.75rem 0.3rem;
-  gap: 0.06rem;
-  border-bottom: 1px solid var(--border-dim);
-  min-height: 1.75rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-#bookmark-bar::-webkit-scrollbar { display: none; }
-
+/* bookmark bar */
+#bookmark-bar { display:flex; align-items:center; background:var(--base); padding:.2rem .75rem .3rem; gap:.06rem; border-bottom:1px solid var(--border-dim); min-height:1.75rem; overflow-x:auto; scrollbar-width:none; }
+#bookmark-bar::-webkit-scrollbar { display:none; }
 .bookmark-item {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.625rem;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  font-size: 0.7rem;
-  font-weight: 400;
-  color: var(--text-muted);
-  text-decoration: none;
-  background: transparent;
-  white-space: nowrap;
-  letter-spacing: 0.01em;
-  transition:
-    background  var(--t-mid),
-    color       var(--t-mid),
-    transform   var(--t-fast);
+  display:flex; align-items:center; gap:.3rem; padding:.2rem .625rem; border-radius:var(--r-sm); cursor:pointer;
+  font-size:.7rem; color:var(--text-muted); background:transparent; white-space:nowrap; letter-spacing:.01em; user-select:none; max-width:9.375rem;
+  transition:background var(--t-mid),color var(--t-mid),transform var(--t-fast);
 }
+.bookmark-item:hover { background:var(--surface); color:var(--text); transform:translateY(-.06rem); }
+.bookmark-item span { overflow:hidden; text-overflow:ellipsis; }
+.bookmark-icon { width:.8rem; height:.8rem; flex-shrink:0; opacity:.75; pointer-events:none; transition:opacity var(--t-mid); }
+.bookmark-item:hover .bookmark-icon { opacity:1; }
 
-.bookmark-item:hover {
-  background: var(--surface);
-  color: var(--text);
-  transform: translateY(-0.06rem);
+/* webview */
+#webview-container { flex:1; position:relative; background:#fff; overflow:hidden; width:100%; }
+iframe.sj-frame { border:none; width:100%; height:100%; display:block; animation:slide-down var(--t-slow) var(--ease-out) both; }
+
+/* home */
+.home-view { width:100%; height:100%; background:var(--void); display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text); position:relative; overflow:hidden; }
+.home-view::before, .home-view::after { content:""; position:absolute; border-radius:50%; pointer-events:none; }
+.home-view::before { width:31.25rem; height:18.75rem; background:radial-gradient(ellipse,rgba(255,255,255,.08) 0%,transparent 70%); top:-5rem; left:50%; transform:translateX(-50%); animation:aurora-drift 8s var(--ease-in-out) infinite; }
+.home-view::after { width:25rem; height:15.625rem; background:radial-gradient(ellipse,rgba(200,200,200,.07) 0%,transparent 70%); bottom:-3.75rem; right:10%; animation:aurora-drift 11s var(--ease-in-out) infinite reverse; }
+.home-screen { background:transparent; height:100%; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; position:relative; z-index:1; }
+.home-screen h1 { font-size:3rem; margin-bottom:2rem; letter-spacing:-.05em; font-family:'JetBrains Mono',monospace; }
+.home-screen h1 span { color:var(--accent); }
+.home-screen h3 { color:#fff; font-size:1.2rem; font-family:'Franklin Gothic Medium','Arial Narrow',Arial,sans-serif; }
+.bookmarks { display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem; max-width:37.5rem; }
+.bookmark { display:flex; flex-direction:column; align-items:center; gap:.6rem; cursor:pointer; transition:transform .2s; }
+.bookmark:hover { transform:translateY(-.3rem); }
+.icon-box { width:4rem; height:4rem; background:var(--base); border-radius:1rem; display:flex; align-items:center; justify-content:center; font-size:1.5rem; border:1px solid rgba(255,255,255,.05); color:var(--accent); }
+.bookmark span { font-size:.75rem; font-weight:500; color:var(--text-dim); }
+
+/* modal */
+.modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.8); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:9999; }
+.modal-content { background:var(--base); border:1px solid var(--accent); padding:1.25rem; border-radius:.75rem; width:90%; max-width:24rem; box-shadow:0 0 1.25rem rgba(255,255,255,.15); max-height:95vh; overflow-y:auto; }
+.modal-content h3 { color:var(--accent); margin-top:0; font-size:1.1rem; }
+.modal-content select, .modal-content input[type="text"] {
+  display:block; width:100%; margin:.3rem 0 .9rem; background:#000; border:1px solid #333; color:var(--text);
+  padding:.5rem; border-radius:.3rem; font-family:var(--font-body); font-size:.85rem; height:auto;
 }
+.modal-content select:focus, .modal-content input[type="text"]:focus { border-color:var(--accent); outline:none; }
+.modal-content select option { background:var(--surface); color:var(--text); }
+#wisp-url-input { margin:.4rem 0 0 !important; }
+.set-label { display:block; font-size:.75rem; color:var(--text-muted); margin-top:.4rem; }
+.wisp-opt { display:flex; align-items:center; gap:.5rem; font-size:.8rem; margin:.4rem 0; cursor:pointer; }
+.wisp-opt input { width:auto; margin:0; padding:0; }
+.modal-actions { display:flex; justify-content:flex-end; gap:.75rem; margin-top:1.25rem; }
+#wisp-save-btn { background:var(--accent); color:#000; border:none; padding:.5rem 1.25rem; border-radius:var(--r-sm); font-weight:600; cursor:pointer; font-size:.9rem; transition:opacity .2s; }
+#wisp-save-btn:hover { opacity:.9; box-shadow:0 0 .9rem rgba(255,255,255,.3); }
+#settings-cancel { background:rgba(255,255,255,.05); color:var(--text); border:1px solid rgba(255,255,255,.1); padding:.5rem .9rem; border-radius:var(--r-sm); cursor:pointer; font-size:.9rem; }
+#settings-cancel:hover { background:rgba(255,255,255,.1); }
 
-.bookmark-item:active {
-  transform: translateY(0px);
+/* misc */
+* { scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+::-webkit-scrollbar { width:.3rem; height:.3rem; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border-dim); border-radius:.2rem; }
+::-webkit-scrollbar-thumb:hover { background:var(--border); }
+:focus-visible { outline:.125rem solid var(--aurora-1); outline-offset:.125rem; border-radius:var(--r-sm); }
+
+/* responsive */
+@media (max-width:768px) {
+  body { font-size:14px; }
+  .tab { max-width:10rem; min-width:6rem; font-size:.65rem; }
+  .home-screen h1 { font-size:2rem; margin-bottom:1.5rem; }
+  .bookmarks { grid-template-columns:repeat(3,1fr); gap:1rem; }
+  .icon-box { width:3rem; height:3rem; font-size:1.2rem; }
 }
-
-.bookmark-icon {
-  width: 0.8rem;
-  height: 0.8rem;
-  flex-shrink: 0;
-  opacity: 0.75;
-  transition: opacity var(--t-mid);
+@media (max-width:480px) {
+  body { font-size:12px; }
+  .tab { max-width:7.5rem; min-width:5rem; font-size:.55rem; padding:.4rem .6rem .5rem; }
+  .home-screen h1 { font-size:1.5rem; margin-bottom:1rem; }
+  .bookmarks { grid-template-columns:repeat(2,1fr); gap:.8rem; }
+  .icon-box { width:2.5rem; height:2.5rem; font-size:1rem; }
+  #nav-bar { padding:.3rem .4rem .25rem; }
+  .nav-controls button, .ibtn { padding:.25rem; }
+  #sj-form { height:1.8rem; margin:0 .25rem; }
 }
-
-.bookmark-item:hover .bookmark-icon {
-  opacity: 1;
+@media (max-height:600px) {
+  body { font-size:11px; }
+  #tabs-strip { padding:.25rem .3rem 0; gap:.1rem; }
+  .tab { padding:.25rem .5rem .3rem; font-size:.55rem; min-width:5rem; max-width:10rem; }
+  .tab-favicon { width:.75rem; height:.75rem; margin-right:.25rem; }
+  #nav-bar { padding:.25rem .4rem .2rem; gap:.2rem; }
+  .nav-controls button, .ibtn { padding:.2rem; }
+  #sj-form { gap:.25rem; }
+  .home-screen { padding:1rem; }
+  .home-screen h1 { font-size:1.5rem; margin-bottom:.75rem; }
+  .home-screen h3 { font-size:.8rem; margin-bottom:.5rem; }
+  .bookmarks { grid-template-columns:repeat(2,1fr); gap:.5rem; max-width:100%; width:100%; }
+  .icon-box { width:2rem; height:2rem; font-size:.9rem; border-radius:.5rem; }
+  .bookmark span { font-size:.6rem; }
+  #bookmark-bar { padding:.18rem .35rem .22rem; min-height:1.4rem; gap:.14rem; flex-wrap:wrap; align-items:flex-start; overflow-x:hidden; overflow-y:auto; max-height:3.2rem; }
+  .bookmark-item { padding:.16rem .35rem; font-size:.62rem; gap:.22rem; max-width:40vw; }
+  .bookmark-icon { width:.66rem; height:.66rem; }
 }
-
-/* Bookmark bar separator */
-.bookmark-sep {
-  width: 1px;
-  height: 0.875rem;
-  background: var(--border-dim);
-  margin: 0 0.25rem;
-  flex-shrink: 0;
-}
-
-/* ─── WEBVIEW ───────────────────────────────────────────────────────── */
-
-#webview-container {
-  flex: 1;
-  position: relative;
-  background: #fff;
-  overflow: hidden;
-  width: 100%;
-}
-
-iframe.sj-frame {
-  border: none;
-  width: 100%;
-  height: 100%;
-  display: block;
-
-  /* Fade in when new page loads */
-  animation: slide-down var(--t-slow) var(--ease-out) both;
-}
-
-/* ─── HOME / NEW TAB PAGE ───────────────────────────────────────────── */
-
-.home-view {
-  width: 100%;
-  height: 100%;
-  background: var(--void);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Aurora orbs — CSS only, transform animated (compositor-safe) */
-.home-view::before,
-.home-view::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.home-view::before {
-  width: 31.25rem;
-  height: 18.75rem;
-  background: radial-gradient(ellipse, rgba(255,255,255,0.08) 0%, transparent 70%);
-  top: -5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: aurora-drift 8s var(--ease-in-out) infinite;
-}
-
-.home-view::after {
-  width: 25rem;
-  height: 15.625rem;
-  background: radial-gradient(ellipse, rgba(200,200,200,0.07) 0%, transparent 70%);
-  bottom: -3.75rem;
-  right: 10%;
-  animation: aurora-drift 11s var(--ease-in-out) infinite reverse;
-}
-
-/* Home search bar */
-.home-search {
-  display: flex;
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-pill);
-  padding: 0 1.25rem;
-  height: 2.875rem;
-  width: min(90vw, 36.25rem);
-  gap: 0.625rem;
-  position: relative;
-  z-index: 1;
-  transition: border-color var(--t-mid), background var(--t-mid);
-}
-
-.home-search:focus-within {
-  border-color: var(--aurora-1);
-  background: var(--elevated);
-}
-
-.home-title {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--text-bright);
-  margin-bottom: 1.75rem;
-  position: relative;
-  z-index: 1;
-
-  /* Gradient text — static, no animation cost */
-  background: linear-gradient(135deg, var(--text-bright) 40%, var(--aurora-1) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ─── SCROLLBARS ────────────────────────────────────────────────────── */
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-::-webkit-scrollbar           { width: 0.3rem; height: 0.3rem; }
-::-webkit-scrollbar-track     { background: transparent; }
-::-webkit-scrollbar-thumb     { background: var(--border-dim); border-radius: 0.2rem; }
-::-webkit-scrollbar-thumb:hover { background: var(--border); }
-
-/* ─── FOCUS VISIBLE ─────────────────────────────────────────────────── */
-
-:focus-visible {
-  outline: 0.125rem solid var(--aurora-1);
-  outline-offset: 0.125rem;
-  border-radius: var(--r-sm);
-}
-
-/* ─── UTILITY ───────────────────────────────────────────────────────── */
-
-/* Status dot (e.g. on tab favicon area) */
-.status-dot {
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: 50%;
-  background: var(--aurora-3);
-  animation: pulse-dot 2s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-/* Tooltip */
-[data-tip] {
-  position: relative;
-}
-[data-tip]::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 0.375rem);
-  left: 50%;
-  transform: translateX(-50%) translateY(0.25rem);
-  background: var(--overlay);
-  color: var(--text);
-  font-size: 0.7rem;
-  font-family: var(--font-body);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border);
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--t-fast), transform var(--t-fast);
-  z-index: 100;
-}
-[data-tip]:hover::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* ─── RESPONSIVE ─────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-  body {
-    font-size: 14px;
-  }
-
-  .tab {
-    max-width: 10rem;
-    min-width: 6rem;
-    font-size: 0.65rem;
-  }
-
-  .home-screen h1 {
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .home-screen img {
-    width: 7rem;
-    height: 7rem;
-
-  }
-
-  .bookmarks {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-  }
-
-  .icon-box {
-    width: 3rem;
-    height: 3rem;
-    font-size: 1.2rem;
-  }
-
-  .home-title {
-    font-size: 1.4rem;
-    margin-bottom: 1.4rem;
-  }
-
-  .home-search {
-    height: 2.3rem;
-    padding: 0 1rem;
-    border-radius: 1.5rem;
-  }
-
-  #wisp-url-input {
-    width: 7rem;
-  }
-}
-
-@media (max-width: 480px) {
-  body {
-    font-size: 12px;
-  }
-
-  .tab {
-    max-width: 7.5rem;
-    min-width: 5rem;
-    font-size: 0.55rem;
-    padding: 0.4rem 0.6rem 0.5rem;
-  }
-
-  .home-screen h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .home-screen img {
-    width: 5rem;
-    height: 5rem;
-  }
-
-  .bookmarks {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.8rem;
-  }
-
-  .icon-box {
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1rem;
-  }
-
-  .home-title {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-  }
-
-  .home-search {
-    height: 2rem;
-    padding: 0 0.75rem;
-  }
-
-  #nav-bar {
-    padding: 0.3rem 0.4rem 0.25rem;
-  }
-
-  .nav-controls button,
-  #nav-bookmark {
-    padding: 0.25rem;
-    font-size: 0.8rem;
-  }
-
-  #sj-form {
-    height: 1.8rem;
-    margin: 0 0.25rem;
-  }
-
-  #wisp-url-input {
-    display: none;
-  }
-}
-
-/* ─── SMALL HEIGHT SCREENS (Chromebooks, etc.) ─── */
-@media (max-height: 600px) {
-  body {
-    font-size: 11px;
-  }
-
-  #tabs-strip {
-    padding: 0.25rem 0.3rem 0;
-    gap: 0.1rem;
-  }
-
-  .tab {
-    padding: 0.25rem 0.5rem 0.3rem;
-    font-size: 0.55rem;
-    min-width: 5rem;
-    max-width: 10rem;
-  }
-
-  .tab-favicon {
-    width: 0.75rem;
-    height: 0.75rem;
-    margin-right: 0.25rem;
-  }
-
-  #nav-bar {
-    padding: 0.25rem 0.4rem 0.2rem;
-    gap: 0.2rem;
-  }
-
-  .nav-controls button,
-  #nav-bookmark,
-  #nav-inspect,
-  #nav-add-bookmark,
-  #fullscreen-toggle {
-    padding: 0.2rem;
-    font-size: 0.75rem;
-  }
-
-  #sj-form {
-    gap: 0.25rem;
-  }
-
-  #sj-address,
-  #search-engine-selector,
-  #engine-selector {
-    font-size: 0.85rem;
-    padding: 0.3rem 0.5rem;
-    height: 1.5rem;
-  }
-
-  .home-screen {
-    padding: 1rem;
-  }
-
-  .home-screen h1 {
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .home-screen h3 {
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .home-screen img {
-    width: 4rem;
-    height: 4rem;
-  }
-
-  .bookmarks {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .icon-box {
-    width: 2rem;
-    height: 2rem;
-    font-size: 0.9rem;
-    border-radius: 0.5rem;
-  }
-
-  .bookmark span {
-    font-size: 0.6rem;
-  }
-
-  #bookmark-bar {
-    padding: 0.18rem 0.35rem 0.22rem;
-    min-height: 1.4rem;
-    gap: 0.14rem;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    overflow-x: hidden;
-    overflow-y: auto;
-    max-height: 3.2rem;
-  }
-
-  .bookmark-item {
-    padding: 0.16rem 0.35rem;
-    font-size: 0.62rem;
-    gap: 0.22rem;
-    min-width: 0;
-    max-width: 40vw;
-  }
-
-  .bookmark-item span {
-    max-width: 30vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: inline-block;
-  }
-
-  .bookmark-icon {
-    width: 0.66rem;
-    height: 0.66rem;
-  }
-
-  .modal-content {
-    padding: 0.8rem;
-    width: 95%;
-  }
-
-  .modal-content h3 {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .modal-content input {
-    padding: 0.3rem;
-    font-size: 0.8rem;
-    margin: 0.4rem 0;
-  }
-
-  #bm-save,
-  #bm-cancel {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.8rem;
-  }
-
-  #wisp-url-input {
-    display: none;
-  }
-}
-
-@media (max-height: 450px) {
-  body {
-    font-size: 10px;
-  }
-
-  #tabs-strip {
-    padding: 0.2rem 0.2rem 0;
-  }
-
-  .tab {
-    padding: 0.2rem 0.4rem 0.25rem;
-    font-size: 0.5rem;
-    min-width: 4.5rem;
-  }
-
-  .tab-favicon {
-    width: 0.7rem;
-    height: 0.7rem;
-    margin-right: 0.2rem;
-  }
-
-  #nav-bar {
-    padding: 0.2rem 0.3rem 0.15rem;
-    gap: 0.15rem;
-  }
-
-  .nav-controls button,
-  #nav-bookmark,
-  #nav-inspect,
-  #nav-add-bookmark,
-  #fullscreen-toggle {
-    padding: 0.15rem;
-    font-size: 0.65rem;
-  }
-
-  #sj-address,
-  #search-engine-selector,
-  #engine-selector {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.4rem;
-    height: 1.3rem;
-  }
-
-  .home-screen h1 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .home-screen h3 {
-    font-size: 0.65rem;
-  }
-
-  .home-screen img {
-    width: 3rem;
-    height: 3rem;
-  }
-
-  #bookmark-bar {
-    padding: 0.14rem 0.28rem 0.18rem;
-    min-height: 1.2rem;
-    gap: 0.1rem;
-    flex-wrap: wrap;
-    overflow-x: hidden;
-    overflow-y: auto;
-    max-height: 2.6rem;
-  }
-
-  .bookmark-item {
-    padding: 0.12rem 0.28rem;
-    font-size: 0.56rem;
-    gap: 0.18rem;
-    max-width: 44vw;
-  }
-
-  .bookmark-item span {
-    max-width: 32vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: inline-block;
-  }
-
-  .bookmark-icon {
-    width: 0.58rem;
-    height: 0.58rem;
-  }
-
-  /* Fullscreen toggle button inside bookmark bar */
-  .bookmarks {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.3rem;
-  }
-
-  .icon-box {
-    width: 1.5rem;
-    height: 1.5rem;
-    font-size: 0.8rem;
-  }
-
-  .bookmark span {
-    font-size: 0.5rem;
-  }
-
-  #wisp-url-input {
-    display: none;
-  }
+@media (max-height:450px) {
+  body { font-size:10px; }
+  #tabs-strip { padding:.2rem .2rem 0; }
+  .tab { padding:.2rem .4rem .25rem; font-size:.5rem; min-width:4.5rem; }
+  .tab-favicon { width:.7rem; height:.7rem; margin-right:.2rem; }
+  #nav-bar { padding:.2rem .3rem .15rem; gap:.15rem; }
+  .nav-controls button, .ibtn { padding:.15rem; }
+  .home-screen h1 { font-size:1.2rem; margin-bottom:.5rem; }
+  .home-screen h3 { font-size:.65rem; }
+  #bookmark-bar { padding:.14rem .28rem .18rem; min-height:1.2rem; max-height:2.6rem; }
+  .bookmark-item { padding:.12rem .28rem; font-size:.56rem; max-width:44vw; }
+  .bookmark-icon { width:.58rem; height:.58rem; }
+  .icon-box { width:1.5rem; height:1.5rem; font-size:.8rem; }
+  .bookmark span { font-size:.5rem; }
 }
 </style>
-  </head>
+</head>
 
-  <body>
-    <div id="browser-ui">
-      <div id="tabs-strip">
-        <button id="add-tab-btn" title="New Tab"><i data-lucide="plus"></i></button>
-      </div>
+<body>
+<div id="browser-ui">
+  <div id="tabs-strip">
+    <button id="add-tab-btn" title="New Tab"><i data-lucide="plus"></i></button>
+  </div>
 
-      <div id="nav-bar">
-        <div class="nav-controls">
-          <button id="nav-back"><i data-lucide="chevron-left"></i></button>
-          <button id="nav-forward"><i data-lucide="chevron-right"></i></button>
-          <button id="nav-reload"><i data-lucide="rotate-cw"></i></button>
-        </div>
-
-<form id="sj-form">
-   <input id="sj-address" type="text" placeholder="Search Google or type a URL" autocomplete="off" />
-   <button type="submit" tabindex="-1" aria-hidden="true" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;"></button>
-    <select id="search-engine-selector" title="Search Engine">
-        <option value="duckduckgo">DuckDuckGo</option>
-        <option value="google">Google</option>
-        <option value="bing">Bing</option>
-        <option value="yahoo">Yahoo</option>
-    </select>
-    <select id="engine-selector" title="Proxy Engine">
-        <option value="scramjet">Scramjet</option>
-        <option value="uv">UV</option>
-    </select>
-    <input id="wisp-url-input" type="text" placeholder="Custom Wisp Server (wss://...)" title="Custom Wisp Server URL" autocomplete="off" />
-    <button type="button" id="wisp-save-btn" title="Save Wisp Server"><i data-lucide="save"></i></button>
-    <button type="button" id="nav-bookmark"><i data-lucide="star"></i></button>
-    <button type="button" id="fullscreen-toggle" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
-        <i data-lucide="maximize-2"></i>
-    </button>
-    <button type="button" id="nav-inspect" title="Developer Tools"><i data-lucide="code"></i></button>
-</form>
-      </div>
-      <div id="bookmark-bar">
-      </div>
+  <div id="nav-bar">
+    <div class="nav-controls">
+      <button id="nav-back"><i data-lucide="chevron-left"></i></button>
+      <button id="nav-forward"><i data-lucide="chevron-right"></i></button>
+      <button id="nav-reload"><i data-lucide="rotate-cw"></i></button>
     </div>
 
-    <div id="webview-container">
-        <div id="home-template" class="home-view" style="display: none;">
-<div class="home-screen">
-  <br>
-                    <h1>Nebula<span> Browser</span></h1>
-                    <h3>No restrictions, no censorship. Just browse freely with peace of mind.</h3>
-                    <div class="bookmarks">
-                        <div class="bookmark" onclick="navigateToUrl('google.com')"><div class="icon-box"><i class="fa-brands fa-google"></i></div><span>Google</span></div>
-                        <div class="bookmark" onclick="navigateToUrl('youtube.com')"><div class="icon-box"><i class="fa-brands fa-youtube"></i></div><span>YouTube</span></div>
-                        <div class="bookmark" onclick="navigateToUrl('tiktok.com')"><div class="icon-box"><i class="fa-brands fa-tiktok"></i></div><span>Tiktok</span></div>
-                        <div class="bookmark" onclick="navigateToUrl('github.com')"><div class="icon-box"><i class="fa-brands fa-github"></i></div><span>GitHub</span></div>
-                        <div class="bookmark" onclick="navigateToUrl('xbox.com/en-US/cloud-gaming')"><div class="icon-box"><i class="fa-brands fa-xbox"></i></div><span>Xbox Cloud Gaming</span></div>
-                        <div class="bookmark" onclick="navigateToUrl('chatgpt.com')"><div class="icon-box"><i class="fa-solid fa-microchip"></i></div><span>ChatGPT</span></div>
-                        <div class="bookmark" onclick="navigateToUrl('twitch.tv')"><div class="icon-box"><i class="fa-brands fa-twitch"></i></div><span>Twitch</span></div>
-                        <div class="bookmark" onclick="navigateToUrl('discord.com')"><div class="icon-box"><i class="fa-brands fa-discord"></i></div><span>Discord</span></div>                    
-                   </div>
-              </div>
-         </div>
-    </div>
-<div id="bookmark-modal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <h3>Create Bookmark</h3>
-      <input type="text" id="bm-name" placeholder="Name (e.g., Google)">
-      <input type="text" id="bm-url" placeholder="URL">
-      <div class="modal-actions">
-        <button id="bm-cancel">Cancel</button>
-        <button id="bm-save">Save</button>
+    <form id="sj-form">
+      <input id="sj-address" type="text" placeholder="Search or type a URL" autocomplete="off" />
+      <button type="submit" tabindex="-1" aria-hidden="true" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;"></button>
+      <button type="button" id="nav-bookmark" class="ibtn" title="Bookmark"><i data-lucide="star"></i></button>
+      <button type="button" id="fullscreen-toggle" class="ibtn" title="Toggle Fullscreen" aria-label="Toggle Fullscreen"><i data-lucide="maximize-2"></i></button>
+      <button type="button" id="nav-inspect" class="ibtn" title="Developer Tools"><i data-lucide="code"></i></button>
+      <button type="button" id="settings-btn" class="ibtn" title="Settings"><i data-lucide="settings"></i></button>
+    </form>
+  </div>
+
+  <div id="bookmark-bar"></div>
+</div>
+
+<div id="webview-container">
+  <div id="home-template" class="home-view" style="display:none;">
+    <div class="home-screen">
+      <br>
+      <h1>Nebula<span> Browser</span></h1>
+      <h3>No restrictions, no censorship. Just browse freely with peace of mind.</h3>
+      <div class="bookmarks">
+        <div class="bookmark" onclick="navigateToUrl('google.com')"><div class="icon-box"><i class="fa-brands fa-google"></i></div><span>Google</span></div>
+        <div class="bookmark" onclick="navigateToUrl('youtube.com')"><div class="icon-box"><i class="fa-brands fa-youtube"></i></div><span>YouTube</span></div>
+        <div class="bookmark" onclick="navigateToUrl('tiktok.com')"><div class="icon-box"><i class="fa-brands fa-tiktok"></i></div><span>Tiktok</span></div>
+        <div class="bookmark" onclick="navigateToUrl('github.com')"><div class="icon-box"><i class="fa-brands fa-github"></i></div><span>GitHub</span></div>
+        <div class="bookmark" onclick="navigateToUrl('xbox.com/en-US/cloud-gaming')"><div class="icon-box"><i class="fa-brands fa-xbox"></i></div><span>Xbox Cloud Gaming</span></div>
+        <div class="bookmark" onclick="navigateToUrl('chatgpt.com')"><div class="icon-box"><i class="fa-solid fa-microchip"></i></div><span>ChatGPT</span></div>
+        <div class="bookmark" onclick="navigateToUrl('twitch.tv')"><div class="icon-box"><i class="fa-brands fa-twitch"></i></div><span>Twitch</span></div>
+        <div class="bookmark" onclick="navigateToUrl('discord.com')"><div class="icon-box"><i class="fa-brands fa-discord"></i></div><span>Discord</span></div>
       </div>
     </div>
   </div>
-  <script>
-   lucide.createIcons({
-    attrs: {
-        width: 16,
-        height: 16,
-        'stroke-width': 2
-    }
-});
-function search(input, template) {
-	try {
-		// input is a valid URL:
-		// eg: https://example.com, https://example.com/test?q=param
-		return new URL(input).toString();
-	} catch (err) {
-		// input was not a valid URL
-	}
+</div>
 
-	try {
-		// input is a valid URL when http:// is added to the start:
-		// eg: example.com, https://example.com/test?q=param
-		const url = new URL(`http://${input}`);
-		// only if the hostname has a TLD/subdomain
-		if (url.hostname.includes(".")) return url.toString();
-	} catch (err) {
-		// input was not valid URL
-	}
+<div id="settings-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <h3>Settings</h3>
 
-	// input may have been a valid URL, however the hostname was invalid
+    <label class="set-label" for="search-engine-selector">Search Engine</label>
+    <select id="search-engine-selector">
+      <option value="duckduckgo">DuckDuckGo</option>
+      <option value="google">Google</option>
+      <option value="bing">Bing</option>
+      <option value="yahoo">Yahoo</option>
+    </select>
 
-	// Attempts to convert the input to a fully qualified URL have failed
-	// Treat the input as a search query
-	return template.replace("%s", encodeURIComponent(input));
-} 	
-	"use strict";
-alert('Some sites might not work on Scramjet engine. Change to UV if a site doesnt work and see if it works.');
-  </script>
-  </body>
+    <label class="set-label" for="engine-selector">Proxy Engine</label>
+    <select id="engine-selector">
+      <option value="scramjet">Scramjet</option>
+      <option value="uv">UV</option>
+    </select>
+
+    <label class="set-label">Wisp Server</label>
+    <label class="wisp-opt"><input type="radio" name="wisp-choice" value="wss://wisp.mercurywork.shop/" checked> wss://wisp.mercurywork.shop/ (default)</label>
+    <label class="wisp-opt"><input type="radio" name="wisp-choice" value="wss://bee.science-edu.me/"> wss://bee.science-edu.me/</label>
+    <label class="wisp-opt"><input type="radio" name="wisp-choice" value="custom"> Custom</label>
+    <input id="wisp-url-input" type="text" placeholder="wss://..." autocomplete="off" style="display:none;" />
+
+    <div class="modal-actions">
+      <button type="button" id="settings-cancel">Cancel</button>
+      <button type="button" id="wisp-save-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+lucide.createIcons({ attrs: { width: 16, height: 16, 'stroke-width': 2 } });
+
+if (!sessionStorage.getItem('scramWarned')) {
+  sessionStorage.setItem('scramWarned', '1');
+  alert('Some sites might not work on Scramjet engine. Change to UV if a site doesnt work and see if it works.');
+}
+</script>
+</body>
 </html>

@@ -112,6 +112,10 @@ async function handleRequest(event) {
     
     console.log(`[SW] Request to ${url} with engine ${engine}`);
     
+    const looksProxied =
+        url.startsWith(`${self.location.origin}/scramjet/`) ||
+        url.includes(__uv$config.prefix);
+
     try {
         if (engine === "scramjet") {
             const sj = initScramjet();
@@ -150,32 +154,60 @@ async function handleRequest(event) {
         }
     } catch (e) {
         console.error(`[SW] Error handling ${engine} request:`, e);
+        if (looksProxied) {
+            return new Response("Proxy error: " + (e?.message || e), { status: 502 });
+        }
     }
     
-    return fetch(event.request);
+   if (new URL(url).origin === self.location.origin && !url.includes("/prox/")) {
+    console.warn("[SW] UNROUTED same-origin request (escaped proxy?):", url,
+        "referrer:", event.request.referrer, "dest:", event.request.destination);
+}
+return fetch(event.request);
 }
 
 // Helper to strip restrictive security headers from proxied responses
 function stripSecurityHeaders(response) {
-    if (!response || !response.headers) return response;
+    if (!response) return response;
 
-    const newHeaders = new Headers(response.headers);
-    
-    // Remove headers that cause "refused to connect" or iframe blocks
-    newHeaders.delete("Cross-Origin-Embedder-Policy");
-    newHeaders.delete("Cross-Origin-Opener-Policy");
-    newHeaders.delete("X-Frame-Options");
-    newHeaders.delete("Content-Security-Policy");
+    // Opaque / opaqueredirect responses (common for redirects scramjet/UV
+    // pass through untouched — auth flows, CDN redirects, video segment
+    // redirects) lock status at 0 and hide headers/body entirely. Rebuilding
+    // a Response from one throws "status 0 outside range [200,599]", which
+    // used to be swallowed by handleRequest's catch and silently fall back
+    // to a raw fetch of this same /scramjet/... path — which Firebase's
+    // rewrite resolves to index.html, so the "proxied page" became your own
+    // homepage with no visible error. Pass these straight through instead.
+    if (response.type === "opaque" || response.type === "opaqueredirect") {
+        return response;
+    }
 
-    // Allow cross-origin framing and sub-resource loading
-    newHeaders.set("Cross-Origin-Resource-Policy", "cross-origin");
-    newHeaders.set("Access-Control-Allow-Origin", "*");
+    try {
+        const newHeaders = new Headers(response.headers);
 
-    return new Response(response.body, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: newHeaders
-    });
+        // Remove headers that cause "refused to connect" or iframe blocks
+        newHeaders.delete("Cross-Origin-Embedder-Policy");
+        newHeaders.delete("Cross-Origin-Opener-Policy");
+        newHeaders.delete("X-Frame-Options");
+        newHeaders.delete("Content-Security-Policy");
+
+        // Allow cross-origin framing and sub-resource loading
+        newHeaders.set("Cross-Origin-Resource-Policy", "cross-origin");
+        newHeaders.set("Access-Control-Allow-Origin", "*");
+
+        // Responses with these statuses are forbidden from carrying a body
+        // at all — the Response constructor throws if you pass one anyway.
+        const forbidsBody = [101, 103, 204, 205, 304].includes(response.status);
+
+        return new Response(forbidsBody ? null : response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: newHeaders
+        });
+    } catch (e) {
+        console.error("[SW] Failed to strip headers, passing response through unmodified:", e);
+        return response;
+    }
 }
 
 self.addEventListener("fetch", (event) => {
